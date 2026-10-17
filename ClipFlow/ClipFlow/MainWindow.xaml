@@ -1,0 +1,82 @@
+<Window x:Class="ClipFlow.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:ClipFlow.Views" Title="ClipFlow">
+    <Grid x:Name="Root" RequestedTheme="Default" Background="Transparent">
+        <Grid.RowDefinitions><RowDefinition Height="48"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <Border x:Name="BackdropFallback" Grid.RowSpan="2" Background="{ThemeResource SolidBackgroundFillColorBaseAltBrush}" IsHitTestVisible="False"/>
+        <Border x:Name="RenderBackdrop" Grid.RowSpan="2" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Visibility="Collapsed"/>
+        <Grid x:Name="AppTitleBar" Height="48" Margin="16,0,140,0">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" IsHitTestVisible="False">
+                <Image x:Name="AppIcon" Source="ms-appx:///Assets/ClipFlow.256.png" Width="20" Height="20" AutomationProperties.Name="ClipFlow 图标"/>
+                <TextBlock Text="ClipFlow" FontSize="14" FontWeight="SemiBold"/>
+            </StackPanel>
+        </Grid>
+        <StackPanel x:Name="LegacyCaptionButtons" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed">
+            <StackPanel.Resources>
+                <Style x:Key="CaptionButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                    <Setter Property="Width" Value="46"/>
+                    <Setter Property="Height" Value="48"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="CornerRadius" Value="0"/>
+                </Style>
+            </StackPanel.Resources>
+            <Button x:Name="CaptionMinimize" Style="{StaticResource CaptionButtonStyle}" Click="CaptionMinimize_Click" AutomationProperties.Name="最小化窗口" ToolTipService.ToolTip="最小化">
+                <FontIcon Glyph="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
+            </Button>
+            <Button x:Name="CaptionMaximize" Style="{StaticResource CaptionButtonStyle}" Click="CaptionMaximize_Click" AutomationProperties.Name="最大化窗口" ToolTipService.ToolTip="最大化">
+                <FontIcon x:Name="CaptionMaximizeGlyph" Glyph="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
+            </Button>
+            <Button x:Name="CaptionClose" Style="{StaticResource CaptionButtonStyle}" Click="CaptionClose_Click" AutomationProperties.Name="关闭窗口并继续后台运行" ToolTipService.ToolTip="关闭窗口">
+                <FontIcon Glyph="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
+            </Button>
+        </StackPanel>
+        <NavigationView x:Name="Navigation" Grid.Row="1" PaneDisplayMode="Auto" OpenPaneLength="236" Background="Transparent"
+            CompactModeThresholdWidth="640" ExpandedModeThresholdWidth="1000"
+            IsBackButtonVisible="Collapsed" IsSettingsVisible="False" IsPaneToggleButtonVisible="True"
+            SelectionChanged="Navigation_SelectionChanged">
+            <NavigationView.Resources>
+                <ResourceDictionary>
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Light">
+                            <SolidColorBrush x:Key="NavigationViewContentBackground" Color="{ThemeResource LayerFillColorDefault}" Opacity="0.55"/>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="Dark">
+                            <SolidColorBrush x:Key="NavigationViewContentBackground" Color="{ThemeResource LayerFillColorDefault}" Opacity="0.55"/>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="HighContrast">
+                            <SolidColorBrush x:Key="NavigationViewContentBackground" Color="{ThemeResource SystemColorWindowColor}"/>
+                        </ResourceDictionary>
+                    </ResourceDictionary.ThemeDictionaries>
+                </ResourceDictionary>
+            </NavigationView.Resources>
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="RecentItem" Content="最近记录" Tag="recent"><NavigationViewItem.Icon><FontIcon Glyph="&#xE81C;"/></NavigationViewItem.Icon></NavigationViewItem>
+                <NavigationViewItem Content="收藏夹" Tag="favorites"><NavigationViewItem.Icon><FontIcon Glyph="&#xE734;"/></NavigationViewItem.Icon></NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="设置" Tag="settings"><NavigationViewItem.Icon><FontIcon Glyph="&#xE713;"/></NavigationViewItem.Icon></NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+            <NavigationView.PaneFooter>
+                <StackPanel x:Name="PaneFooterText" Margin="16,4,12,4" Orientation="Horizontal" Spacing="12" Visibility="Collapsed">
+                    <FontIcon Glyph="&#xE72E;" Width="20" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="仅在本机保存" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+            </NavigationView.PaneFooter>
+            <Grid Margin="28,20,28,24" RowSpacing="16">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <StackPanel Spacing="6">
+                    <TextBlock Text="{Binding PageTitle}" Style="{StaticResource TitleTextBlockStyle}"/>
+                    <TextBlock Text="{Binding PageSubtitle}" Visibility="{Binding HistoryVisibility}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <InfoBar x:Name="Feedback" IsOpen="False" IsClosable="True" Visibility="Collapsed" Margin="0,6,0,0">
+                        <InfoBar.ActionButton><Button Content="重试初始化" Command="{Binding RetryCommand}" Visibility="{Binding RetryVisibility}"/></InfoBar.ActionButton>
+                    </InfoBar>
+                </StackPanel>
+                <views:HistoryView x:Name="HistoryContent" Grid.Row="1" Visibility="{Binding HistoryVisibility}"/>
+                <views:SettingsView Grid.Row="1" Visibility="{Binding SettingsVisibility}"/>
+            </Grid>
+        </NavigationView>
+    </Grid>
+</Window>

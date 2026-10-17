@@ -1,0 +1,8 @@
+PASS: Release window starts and responds
+PASS: Release tray icon registered in Shell
+PASS: System close hides Release window and keeps process running
+PASS: Second Release launch redirects activation and exits cleanly
+PASS: Existing Release instance restores after relaunch
+PASS: Native tray Exit command terminates Release process with code 0
+PASS: Exit removes tray icon from Shell
+SUCCESS

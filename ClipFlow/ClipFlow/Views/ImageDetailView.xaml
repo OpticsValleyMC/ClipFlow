@@ -1,0 +1,27 @@
+<UserControl x:Class="ClipFlow.Views.ImageDetailView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid RowSpacing="12">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <ContentControl x:Name="ZoomControls" IsEnabled="False" IsTabStop="False" HorizontalContentAlignment="Stretch">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button x:Name="FitButton" Content="适应窗口" Click="Fit_Click"/>
+            <Button x:Name="ActualButton" Content="100%" Click="Actual_Click" AutomationProperties.Name="按原始像素查看图片"/>
+            <Button x:Name="ZoomOutButton" Content="−" Width="40" Click="ZoomOut_Click" AutomationProperties.Name="缩小图片" ToolTipService.ToolTip="缩小"/>
+            <Button x:Name="ZoomInButton" Content="+" Width="40" Click="ZoomIn_Click" AutomationProperties.Name="放大图片" ToolTipService.ToolTip="放大"/>
+            <TextBlock x:Name="ZoomLabel" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+          </StackPanel>
+        </ContentControl>
+        <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="4">
+            <Grid>
+                <ScrollViewer x:Name="PreviewScroll" ZoomMode="Enabled" MinZoomFactor="0.1" MaxZoomFactor="8"
+                    HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" ViewChanged="Scroll_ViewChanged">
+                    <Image x:Name="OriginalImage" Stretch="Fill" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.Name="原始图片预览，滚动鼠标滚轮缩放，按住鼠标左键拖动" ToolTipService.ToolTip="滚轮缩放 · 按住左键拖动"/>
+                </ScrollViewer>
+                <ProgressRing x:Name="LoadingRing" IsActive="True" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock x:Name="Failure" Text="图片无法加载，文件可能已丢失或损坏。" TextWrapping="Wrap" TextAlignment="Center"
+                    Margin="24" Visibility="Collapsed" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

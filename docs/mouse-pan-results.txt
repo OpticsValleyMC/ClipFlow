@@ -1,0 +1,7 @@
+READY: mouse pan fixture at 200%, initial offsets 100/100
+DRAG 1: offsets 280.0/240.0; released=True
+DRAG 2: offsets 120.0/120.0; released=True
+DRAG 3: offsets 0.0/0.0; released=True
+DRAG 4: offsets 170.0/150.0; released=True
+FAIL: System.TimeoutException: 鼠标验收超时。
+   at ClipFlow.Diagnostics.PanScenario.RunAsync(MainViewModel vm, Func`2 createDialog) in <repo>/ClipFlow\ClipFlow\Diagnostics\PanScenario.cs:line 54

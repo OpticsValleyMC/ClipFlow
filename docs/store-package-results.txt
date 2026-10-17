@@ -1,0 +1,34 @@
+PASS: Upload ZIP contains one x64 MSIX
+PASS: Upload ZIP contains a symbol package
+PASS: Required package file exists: AppxManifest.xml
+PASS: Required package file exists: AppxBlockMap.xml
+PASS: Required package file exists: [Content_Types].xml
+PASS: Required package file exists: resources.pri
+PASS: Required package file exists: ClipFlow.exe
+PASS: Required package file exists: ClipFlow.dll
+PASS: Required package file exists: ClipFlow.Core.dll
+PASS: Required package file exists: Assets/ClipFlow.ico
+PASS: Required package file exists: Assets/ClipFlow.256.png
+PASS: Required package file exists: Licenses/ClipFlow-MIT.txt
+PASS: Required package file exists: Licenses/WindowsAppSDK-LICENSE.txt
+PASS: Required package file exists: Licenses/WinUI-NOTICE.txt
+PASS: Required package file exists: Licenses/dotnet-THIRD-PARTY-NOTICES.txt
+PASS: Self-contained .NET and WinUI runtime binaries are included
+PASS: No user history, test executable, signing key or design source image in payload
+PASS: Packaged identity/version/architecture match Partner Center configuration
+PASS: Packaged display name matches configured Store reservation: ClipFlow - 剪贴板工具
+PASS: Packaged OS target is Windows 10 build 19041 or later
+PASS: Packaged capabilities contain only runFullTrust
+PASS: Application display name agrees with the reserved package display name
+PASS: Executable and full-trust desktop entry point resolve correctly
+PASS: Packaged manifest logo resolves: Assets/StoreLogo.png
+PASS: Packaged manifest logo resolves: Assets/Square150x150Logo.png
+PASS: Packaged manifest logo resolves: Assets/Square44x44Logo.png
+PASS: Packaged manifest logo resolves: Assets/Wide310x150Logo.png
+PASS: Packaged manifest logo resolves: Assets/Square71x71Logo.png
+PASS: Packaged manifest logo resolves: Assets/Square310x310Logo.png
+PASS: Packaged manifest logo resolves: Assets/SplashScreen.png
+PASS: Windows SDK MakeAppx unpack/validation succeeds without /nv
+SHA256: C5EE7D8360AC11201EB3B0AC44201C35CF90707F39A85905C48399EE78AA263B
+SCOPE: structural validation only; not Partner Center acceptance or WACK certification.
+SUCCESS

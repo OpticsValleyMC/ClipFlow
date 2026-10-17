@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ClipFlow (Packaged)": {
+      "commandName": "MsixPackage"
+    },
+    "ClipFlow (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

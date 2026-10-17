@@ -1,0 +1,7 @@
+ENV: MicaSupported=True; HighContrast=False
+PASS: Light theme uses Mica Alt and readable integrated title area; desktop screenshot saved
+PASS: Dark theme uses Mica Alt and readable integrated title area; desktop screenshot saved
+PASS: System theme uses Mica Alt and readable integrated title area; desktop screenshot saved
+PASS: unsupported-material fallback is opaque and follows Light/Dark themes
+PASS: background hide/restore preserves backdrop and readable custom/native caption
+SUCCESS

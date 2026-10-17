@@ -1,0 +1,6 @@
+PASS: native hit test recognizes the integrated title drag region
+PASS: themed maximize/restore buttons operate the native presenter and update accessible state
+PASS: minimize and activation restore preserve the window
+PASS: close routes through WM_CLOSE, hides to tray and restores without exiting
+PASS: native title double-click maximizes and restores
+SUCCESS

@@ -1,0 +1,2 @@
+PASS: application process restart restores history, favorites, theme, pause and retention
+SUCCESS

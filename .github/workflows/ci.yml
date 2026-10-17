@@ -1,0 +1,23 @@
+name: Windows build and core checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Release source checks
+        shell: pwsh
+        run: ./scripts/Test-ReleaseReadiness.ps1
+      - name: Core tests
+        shell: pwsh
+        run: ./scripts/Test.ps1
+      - name: WinUI x64 build
+        shell: pwsh
+        run: ./scripts/Build.ps1 -Configuration Release -OutputDirectory artifacts/ci-release

@@ -1,0 +1,18 @@
+PASS: native Mica, themes, transparent layering, fallback and background restore
+PASS: real text capture
+PASS: repeat copy updates time without inserting
+PASS: long text capture, scroll, paging, full copy and restart
+PASS: favorite, search and own copy
+PASS: pause and privacy flags
+PASS: real image capture and duplicate pixels
+PASS: temporary image files become independent managed copies
+PASS: missing and corrupt thumbnail placeholders
+PASS: native mouse wheel zoom in/out, pointer anchor, min/max bounds, empty margins and drag after zoom
+PASS: HD thumbnail, original image zoom and corrupt original recovery
+PASS: image aspect-fit, centered portrait, zoom buttons and narrow preview
+PASS: occupied clipboard retries and subsequent events recover
+PASS: light, dark, system themes and layout renders
+PASS: image deletion removes both files
+PASS: restart storage
+PASS: clear cancel and confirm
+SUCCESS

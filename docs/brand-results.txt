@@ -1,0 +1,10 @@
+﻿PASS: Executable file/product version is exactly 1.0.0.0
+PASS: Executable author/company is OpticsValley and product is ClipFlow
+PASS: Project author and assembly version configured centrally
+PASS: Package manifest version and publisher display name match
+PASS: ImageGen master has square high-resolution canvas and transparent exterior/interior
+PASS: 49 package PNG assets have correct 100-400% dimensions and alpha
+PASS: 45 exact-size default/dark/light taskbar variants match and preserve alpha
+PASS: ICO contains 15 resolutions from 16 to 256 pixels
+PASS: Windows decodes the multi-size ICO
+SUCCESS
