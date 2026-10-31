@@ -18,7 +18,8 @@ if ($LASTEXITCODE -ne 0 -or $files.Count -eq 0) {
     throw 'Could not enumerate distributable source.'
 }
 
-$archivePath = Join-Path $workPath 'ClipFlow-1.0.0.0-source.zip'
+[xml]$versionProps=Get-Content -LiteralPath (Join-Path $repoPath 'ClipFlow/Directory.Build.props')
+$archivePath = Join-Path $workPath ("ClipFlow-$($versionProps.Project.PropertyGroup.FileVersion)-source.zip")
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 

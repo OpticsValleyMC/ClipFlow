@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices;
+using ClipFlow.Core;
+using ClipFlow.Views;
 
 namespace ClipFlow.Services;
 
@@ -6,12 +8,17 @@ namespace ClipFlow.Services;
 internal sealed class TrayService : IDisposable
 {
     internal const uint CallbackMessage = 0x8000 + 71;
-    internal const uint OpenCommand = 0xCF01, ExitCommand = 0xCF02, ToggleRecordingCommand = 0xCF03;
+    internal const uint OpenCommand = 0xCF01, ExitCommand = 0xCF02, ToggleRecordingCommand = 0xCF03, ToggleStartupCommand = 0xCF04;
     private const uint ShowMenuMessage = 0x8000 + 72;
     private const uint IconId = 1;
     private readonly IntPtr _window, _icon, _menuWindow;
     private readonly Action _open, _exit, _toggleRecording;
     private readonly Func<(bool Ready, bool Recording)> _recordingState;
+    private readonly Func<StartupSnapshot> _startupState;
+    private readonly Func<Task> _refreshStartup;
+    private readonly Action _toggleStartup;
+    private readonly Func<ThemeMode> _theme;
+    private TrayMenuWindow? _fluentMenu;
     private readonly SubclassProc _callback;
     private readonly uint _taskbarCreated;
     private bool _disposed, _subclassed, _version4, _menuQueued, _menuOpen;
@@ -20,10 +27,12 @@ internal sealed class TrayService : IDisposable
     internal static string VersionLabel => AppInfo.VersionLabel;
 
     public TrayService(IntPtr window, Action open, Action exit, Action toggleRecording,
-        Func<(bool Ready, bool Recording)> recordingState)
+        Func<(bool Ready, bool Recording)> recordingState, Func<StartupSnapshot> startupState,
+        Func<Task> refreshStartup, Action toggleStartup, Func<ThemeMode> theme)
     {
         _window = window; _open = open; _exit = exit; _callback = WindowProc;
         _toggleRecording = toggleRecording; _recordingState = recordingState;
+        _startupState = startupState; _refreshStartup = refreshStartup; _toggleStartup = toggleStartup; _theme = theme;
         // WinUI's hidden main window cannot reliably own an active native menu.
         // A separate off-screen tool window keeps menu activation out of WinUI.
         _menuWindow = CreateWindowEx(0x80, "STATIC", "ClipFlow Tray Menu Owner", 0x80000000,
@@ -66,7 +75,7 @@ internal sealed class TrayService : IDisposable
             if (!_disposed && message == ShowMenuMessage)
             {
                 _menuQueued = false;
-                ShowMenu();
+                _ = ShowFluentMenuAsync();
                 return IntPtr.Zero;
             }
             if (!_disposed && message == 0x111)
@@ -75,6 +84,7 @@ internal sealed class TrayService : IDisposable
                 if (command == OpenCommand) { _open(); return IntPtr.Zero; }
                 if (command == ExitCommand) { _exit(); return IntPtr.Zero; }
                 if (command == ToggleRecordingCommand) { if (_recordingState().Ready) _toggleRecording(); return IntPtr.Zero; }
+                if (command == ToggleStartupCommand) { if (_startupState().CanChange) _toggleStartup(); return IntPtr.Zero; }
             }
         }
         catch { /* The app remains reachable and future callbacks continue. */ }
@@ -90,6 +100,8 @@ internal sealed class TrayService : IDisposable
         var state = _recordingState();
         AppendMenu(menu, state.Ready ? 0u : 0x3u, ToggleRecordingCommand,
             !state.Ready ? "记录不可用" : state.Recording ? "暂停记录" : "继续记录");
+        var startup = _startupState();
+        AppendMenu(menu, (startup.CanChange ? 0u : 0x3u) | (startup.Enabled ? 0x8u : 0u), ToggleStartupCommand, "开机自启动");
         AppendMenu(menu, 0, ExitCommand, "退出");
         return menu;
     }
@@ -134,14 +146,53 @@ internal sealed class TrayService : IDisposable
 #endif
         }
         if (_disposed) return;
-        if (command is OpenCommand or ExitCommand or ToggleRecordingCommand)
+        if (command is OpenCommand or ExitCommand or ToggleRecordingCommand or ToggleStartupCommand)
             PostMessage(_window, 0x111, new UIntPtr(command), IntPtr.Zero);
         else { var data = Data(); Shell_NotifyIcon(3, ref data); }
+    }
+    private async Task ShowFluentMenuAsync()
+    {
+        if (_menuOpen || _disposed) return;
+        _menuOpen = true;
+#if DEBUG
+        LastMenuCommandForTest = 0;
+        LastMenuErrorForTest = null;
+#endif
+        try
+        {
+            await _refreshStartup();
+            if (_disposed) return;
+            // A fresh XamlRoot avoids stale popup input state after hiding the
+            // previous host. Close it only after its input callback has returned.
+            var previous = _fluentMenu;
+            _fluentMenu = null;
+            previous?.Shutdown();
+            var current = new TrayMenuWindow(command =>
+                {
+#if DEBUG
+                    LastMenuCommandForTest = command;
+#endif
+                    if (!_disposed) PostMessage(_window, 0x111, new UIntPtr(command), IntPtr.Zero);
+                });
+            _fluentMenu = current;
+            current.Dismissed += () => { if (ReferenceEquals(_fluentMenu, current)) _menuOpen = false; };
+            await current.ShowAsync(_menuPoint.X, _menuPoint.Y, _theme(), _recordingState(), _startupState());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(ex);
+#if DEBUG
+            LastMenuErrorForTest = ex.ToString();
+#endif
+            _fluentMenu?.Dismiss(); _menuOpen = false;
+            if (!_disposed) ShowMenu(); // Keep every command reachable if XAML cannot create a popup.
+        }
     }
     public void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
+        _fluentMenu?.Shutdown();
         var data = Data(); Shell_NotifyIcon(2, ref data);
         IsAvailable = false;
         if (_subclassed) { RemoveWindowSubclass(_window, _callback, 71); _subclassed = false; }
@@ -184,13 +235,31 @@ internal sealed class TrayService : IDisposable
 #if DEBUG
     private IntPtr ActiveMenuForTest { get; set; }
     internal uint LastMenuCommandForTest { get; private set; }
-    internal (int X, int Y) MenuItemCenterForTest(uint position)
+    internal string? LastMenuErrorForTest { get; private set; }
+    internal async Task<(int X, int Y)> MenuItemCenterForTestAsync(uint position)
     {
+        if (_fluentMenu?.IsMenuOpen == true)
+        {
+            var result = new TaskCompletionSource<(int X, int Y)>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _fluentMenu.DispatcherQueue.TryEnqueue(() =>
+            {
+                try { result.SetResult(_fluentMenu.CommandCenter(position switch { 2 => OpenCommand, 3 => ToggleRecordingCommand, 4 => ToggleStartupCommand, _ => ExitCommand })); }
+                catch (Exception ex) { result.SetException(ex); }
+            });
+            return await result.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        }
         if (ActiveMenuForTest == IntPtr.Zero || !GetMenuItemRect(IntPtr.Zero, ActiveMenuForTest, position, out var rect))
             throw new InvalidOperationException("原生菜单项尚未显示。");
         return ((rect.Left + rect.Right) / 2, (rect.Top + rect.Bottom) / 2);
     }
-    internal IntPtr MenuOwnerForTest => _menuWindow;
+    internal IntPtr MenuOwnerForTest => _fluentMenu?.NativeHandle ?? _menuWindow;
+    internal bool FluentMenuOpenForTest => _fluentMenu?.IsMenuOpen == true;
+    internal bool MenuHasFocusForTest
+    {
+        get { GetWindowThreadProcessId(GetForegroundWindow(), out var process); return FluentMenuOpenForTest && process == Environment.ProcessId; }
+    }
+    internal bool StandardMenuForTest => _fluentMenu?.UsesStandardMenu == true;
+    internal void CancelMenuForTest() => _fluentMenu?.DispatcherQueue.TryEnqueue(() => _fluentMenu.Dismiss());
     internal bool MenuOpenForTest => _menuOpen;
     internal void RequestMenuForTest()
     {
@@ -216,7 +285,7 @@ internal sealed class TrayService : IDisposable
         var menu = CreateMenu();
         try
         {
-            return new[] { 0u, 2u, 3u, 4u }.Select(position =>
+            return new[] { 0u, 2u, 3u, 4u, 5u }.Select(position =>
             {
                 var text = new System.Text.StringBuilder(128);
                 GetMenuString(menu, position, text, text.Capacity, 0x400);
@@ -263,4 +332,6 @@ internal sealed class TrayService : IDisposable
     [DllImport("user32", CharSet = CharSet.Unicode, EntryPoint = "LoadImageW")] private static extern IntPtr LoadImage(IntPtr instance, string path, uint type, int width, int height, uint flags);
     [DllImport("user32")] private static extern uint GetDpiForWindow(IntPtr hwnd);
     [DllImport("user32")] private static extern int GetSystemMetricsForDpi(int index, uint dpi);
+    [DllImport("user32")] private static extern IntPtr GetForegroundWindow();
+    [DllImport("user32")] private static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
 }

@@ -1,6 +1,6 @@
 <UserControl x:Class="ClipFlow.Views.RecordCard"
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
- xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="using:ClipFlow.Views">
     <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="16">
         <Grid RowSpacing="12">
             <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
@@ -8,11 +8,14 @@
                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <FontIcon Glyph="{Binding TypeGlyph}" FontSize="16" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                 <TextBlock Grid.Column="1" Text="{Binding KindLabel}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                <FontIcon Grid.Column="2" Glyph="&#xE735;" FontSize="12" Visibility="{Binding FavoriteVisibility}" Foreground="{ThemeResource SystemControlHighlightAccentBrush}" AutomationProperties.Name="已收藏"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE718;" FontSize="12" Visibility="{Binding PinnedVisibility}" AutomationProperties.Name="已置顶"/>
+                    <FontIcon Glyph="&#xE735;" FontSize="12" Visibility="{Binding FavoriteVisibility}" Foreground="{ThemeResource SystemControlHighlightAccentBrush}" AutomationProperties.Name="已收藏"/>
+                </StackPanel>
             </Grid>
             <Button Grid.Row="1" Command="{Binding DetailCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="8" Background="Transparent" BorderThickness="0" AutomationProperties.Name="查看完整内容">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="{Binding Preview}" MaxLines="3" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Visibility="{Binding TextVisibility}" FontSize="14"/>
+                    <TextBlock x:Name="PreviewText" Text="{Binding Preview}" local:SearchHighlight.Query="{Binding SearchQuery}" MaxLines="3" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Visibility="{Binding TextVisibility}" FontSize="14"/>
                     <StackPanel Visibility="{Binding ImageVisibility}" Spacing="8">
                         <Image Source="{Binding Thumbnail}" Height="150" Stretch="Uniform" HorizontalAlignment="Left" Visibility="{Binding ImagePreviewVisibility}" AutomationProperties.Name="图片缩略图"/>
                         <Border Visibility="{Binding ImageFailureVisibility}" Padding="20" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="4">
@@ -27,7 +30,8 @@
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <TextBlock Text="{Binding Timestamp}" VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                    <Button Command="{Binding CopyCommand}" AutomationProperties.Name="复制记录" ToolTipService.ToolTip="复制记录"><FontIcon Glyph="&#xE8C8;" FontSize="14"/></Button>
+                    <Button Command="{Binding PinCommand}" Visibility="{Binding PinActionVisibility}" AutomationProperties.Name="{Binding PinLabel}" ToolTipService.ToolTip="{Binding PinLabel}"><FontIcon Glyph="{Binding PinGlyph}" FontSize="14"/></Button>
+                    <Button x:Name="CopyButton" Command="{Binding CopyCommand}" AutomationProperties.Name="{Binding CopyLabel}" ToolTipService.ToolTip="{Binding CopyLabel}"><FontIcon Glyph="{Binding CopyGlyph}" FontSize="14"/></Button>
                     <Button Command="{Binding FavoriteCommand}" AutomationProperties.Name="{Binding FavoriteLabel}" ToolTipService.ToolTip="{Binding FavoriteLabel}"><FontIcon Glyph="{Binding FavoriteGlyph}" FontSize="14"/></Button>
                     <Button Command="{Binding DeleteCommand}" AutomationProperties.Name="删除记录" ToolTipService.ToolTip="删除记录"><FontIcon Glyph="&#xE74D;" FontSize="14"/></Button>
                 </StackPanel>

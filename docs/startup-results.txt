@@ -1,0 +1,5 @@
+PASS: isolated packaged application resolves the registered StartupTask and defaults to disabled
+PASS: settings-page automation toggle enables the actual Windows StartupTask
+PASS: external StartupTask state changes refresh into the settings control
+PASS: disabling in the application disables the actual Windows task
+SUCCESS

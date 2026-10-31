@@ -19,6 +19,7 @@ PASS: Packaged identity/version/architecture match Partner Center configuration
 PASS: Packaged display name matches configured Store reservation: ClipFlow - 剪贴板工具
 PASS: Packaged OS target is Windows 10 build 19041 or later
 PASS: Packaged capabilities contain only runFullTrust
+PASS: Packaged StartupTask defaults off and resolves to ClipFlow.exe
 PASS: Application display name agrees with the reserved package display name
 PASS: Executable and full-trust desktop entry point resolve correctly
 PASS: Packaged manifest logo resolves: Assets/StoreLogo.png
@@ -29,6 +30,6 @@ PASS: Packaged manifest logo resolves: Assets/Square71x71Logo.png
 PASS: Packaged manifest logo resolves: Assets/Square310x310Logo.png
 PASS: Packaged manifest logo resolves: Assets/SplashScreen.png
 PASS: Windows SDK MakeAppx unpack/validation succeeds without /nv
-SHA256: C5EE7D8360AC11201EB3B0AC44201C35CF90707F39A85905C48399EE78AA263B
+SHA256: AAC5806872E936ADA3DC9743FE5E68F9770A3DBD61D593886F780B9E0A780D3B
 SCOPE: structural validation only; not Partner Center acceptance or WACK certification.
 SUCCESS

@@ -1,6 +1,6 @@
 # Microsoft Store 与 GitHub 发布
 
-维护者：OpticsValley。应用版本：1.0.0.0。当前正式打包目标：Windows 10 / 11 x64，最低 10.0.19041.0。
+维护者：OpticsValley。应用版本：1.1.0.0。当前正式打包目标：Windows 10 / 11 x64，最低 10.0.19041.0。
 
 ## 身份与清单
 
@@ -12,7 +12,7 @@
 | Package/Identity/Publisher | `CN=3F646DDF-EFA2-4801-82BE-82D7E5808841` |
 | Package/Properties/PublisherDisplayName | `OpticsValley` |
 | DisplayName | `ClipFlow - 剪贴板工具`（与 Partner Center 保留名称一致） |
-| Version | `1.0.0.0` |
+| Version | `1.1.0.0` |
 | TargetDeviceFamily | `Windows.Desktop` |
 | MinVersion | `10.0.19041.0` |
 | MaxVersionTested | `10.0.22621.0`（与目标框架一致，打包工具生成值） |
@@ -26,11 +26,13 @@
 
 ## 权限与审核说明
 
-唯一声明为 `runFullTrust`：WinUI 3 桌面程序使用 Windows 剪贴板 API 监听复制事件、读写当前用户本地历史，并通过原生系统托盘提供后台记录与退出。这是普通用户完整信任桌面进程，不是管理员权限；exe 声明 `asInvoker`、`uiAccess=false`。关闭窗口时只是隐藏现有进程，没有 UWP 后台任务、Windows 服务、开机自启动或扩展后台执行申请。不应为这项功能增加 `extendedBackgroundTaskTime`、`broadFileSystemAccess`、`allowElevation` 或网络能力。
+唯一受限功能声明为 `runFullTrust`：WinUI 3 桌面程序使用 Windows 剪贴板 API 监听复制事件、读写当前用户本地历史，并通过系统托盘提供后台记录与退出。这是普通用户完整信任桌面进程，不是管理员权限；exe 声明 `asInvoker`、`uiAccess=false`。1.1 新增 `windows.startupTask` 桌面扩展，默认 Enabled=false，用户在设置/托盘主动启用后才在登录时运行，任务管理器可控制；不写注册表 Run 键。关闭窗口时只是隐藏现有进程，没有 UWP 后台任务、Windows 服务或扩展后台执行申请。不增加 `extendedBackgroundTaskTime`、`broadFileSystemAccess`、`allowElevation` 或网络能力。
 
 可填写到 Partner Center 的权限审核说明：
 
-> ClipFlow 是 Windows 10 / 11 WinUI 3 桌面剪贴板管理器。runFullTrust 用于访问桌面剪贴板 API、系统托盘及当前用户本地数据。用户关闭主窗口后可以在托盘继续记录、暂停或退出。应用不请求管理员权限，不提供 Windows 服务或开机启动，不含网络传输、遥测或云同步。所有历史及图片仅保存于本机当前用户的数据目录。
+> ClipFlow 是 Windows 桌面剪贴板管理器，runFullTrust 用于普通用户权限下的剪贴板访问、本地保存及托盘交互。用户可主动启用 Windows StartupTask 开机启动，也可随时暂停、禁用或退出。应用不请求管理员权限，不安装服务或驱动，不上传数据，无云同步或遥测。
+
+English: ClipFlow uses runFullTrust for standard-user desktop clipboard access, local storage and tray controls. Users may opt into Windows StartupTask sign-in launch and can pause, disable startup or exit. No administrator privileges, services, drivers, data uploads, cloud sync or telemetry are used.
 
 ## 构建上传包
 
@@ -53,7 +55,7 @@
 
 1. 确认 Partner Center 当前产品身份与上述值完全一致，应用名称已保留，开发者账号验证完成。
 2. 将根目录 [PRIVACY.md](../PRIVACY.md) 托管为公开可访问页面，把最终 HTTPS 地址填入商店隐私政策 URL。GitHub 仓库公开后可使用该文档的公开地址，或启用 GitHub Pages。不要填写本地路径、私有仓库地址或未建立的占位 URL。
-3. 填写中文应用描述、截图、分类、年龄分级、支持联系方式与权限说明。说明应用后台运行方式、暂停入口、无开机启动及不支持 OCR；不要宣称自动识别所有敏感信息。
+3. 填写中文应用描述、截图、分类、年龄分级、支持联系方式与权限说明。说明后台运行方式、暂停入口、开机启动默认关闭且可由 Windows 管理，以及不支持 OCR；不要宣称自动识别所有敏感信息。
 4. 在 Windows App Certification Kit (WACK) 对可安装的签名包执行认证检查，并在干净 Windows 10 / 11 x64 环境验证安装、首次启动、图片和文本采集、退出、卸载、更新后数据保留。开发机源码验收不能代替这些结果。
 5. 上传本次 `.msixupload`，检查 Partner Center 的包分析结果。实际账号校验、受限能力审核和 Microsoft Store 最终认证只能由该环境确认，不能预先保证审核成功。首次版本为 1.0.0.0；后续更新需递增版本，Store 版本最后一段保持 0。
 

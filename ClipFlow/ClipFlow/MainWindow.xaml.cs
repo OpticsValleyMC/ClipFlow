@@ -1,6 +1,7 @@
 using ClipFlow.Core;
 using ClipFlow.Services;
 using ClipFlow.ViewModels;
+using ClipFlow.Views;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -14,6 +15,9 @@ public sealed partial class MainWindow : Window
     private readonly ThemeService _themes;
     private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _feedbackTimer;
     private readonly TrayService _tray;
+    private readonly HotkeyService _hotkey;
+    private QuickHistoryWindow? _quickHistory;
+    private bool _quickOpening;
     private bool _exiting;
     private bool _dialogOpen;
     public MainWindow()
@@ -59,7 +63,7 @@ public sealed partial class MainWindow : Window
 #else
         _viewModel = new MainViewModel(DispatcherQueue);
 #endif
-        _viewModel.ThemeChanged += _themes.Apply;
+        _viewModel.AppearanceChanged += _themes.ApplySettings;
         _viewModel.Notice += ShowNotice;
         _viewModel.ConfirmClear = ConfirmClearAsync;
         _viewModel.DetailRequested = ShowDetailAsync;
@@ -69,13 +73,55 @@ public sealed partial class MainWindow : Window
             PaneFooterText.Visibility = Navigation.IsPaneOpen ? Visibility.Visible : Visibility.Collapsed);
         Root.Loaded += OnLoaded;
         _tray = new TrayService(WinRT.Interop.WindowNative.GetWindowHandle(this), RestoreWindow, () => _ = ExitAsync(),
-            () => _viewModel.ToggleRecordingCommand.Execute(null), () => (_viewModel.IsReady, _viewModel.RecordingEnabled));
+            () => _viewModel.ToggleRecordingCommand.Execute(null), () => (_viewModel.IsReady, _viewModel.RecordingEnabled),
+            () => new StartupSnapshot(_viewModel.StartupEnabled, _viewModel.CanChangeStartup, _viewModel.StartupDescription),
+            _viewModel.RefreshStartupAsync, () => _ = _viewModel.SetStartupAsync(!_viewModel.StartupEnabled), () => _viewModel.Settings.Theme);
+        _hotkey = new HotkeyService(WinRT.Interop.WindowNative.GetWindowHandle(this), () => _ = ToggleQuickHistoryAsync());
+        _viewModel.RegisterShortcut = _hotkey.Register;
+        _viewModel.AppearanceChanged += ApplyShortcut;
         AppWindow.Closing += (_, args) =>
         {
             if (!_exiting && _tray.IsAvailable) { args.Cancel = true; AppWindow.Hide(); }
         };
-        Closed += (_, _) => { _tray.Dispose(); _feedbackTimer.Stop(); _viewModel.Dispose(); };
-        Activated += (_, args) => AppTitleBar.Opacity = args.WindowActivationState == WindowActivationState.Deactivated ? .7 : 1;
+        Closed += (_, _) => { _hotkey.Dispose(); _quickHistory?.Shutdown(); _tray.Dispose(); _feedbackTimer.Stop(); _viewModel.Dispose(); };
+        Activated += (_, args) =>
+        {
+            AppTitleBar.Opacity = args.WindowActivationState == WindowActivationState.Deactivated ? .7 : 1;
+            if (args.WindowActivationState != WindowActivationState.Deactivated) _ = _viewModel.RefreshStartupAsync();
+        };
+    }
+    private void ApplyShortcut(AppSettings settings)
+    {
+#if DEBUG
+        // Other isolated fixtures must not steal the running user's shortcut.
+        if (Environment.GetEnvironmentVariable("CLIPFLOW_SELF_TEST") is not null) return;
+#endif
+        _viewModel.SetShortcutStatus(_hotkey.Register(settings.HotkeyModifiers, settings.HotkeyKey) ? "" : "快捷键已被占用或不可用，请更换组合");
+    }
+    private async Task ToggleQuickHistoryAsync()
+    {
+        if (_exiting || !_viewModel.IsReady) return;
+        if (_quickOpening) { _quickHistory?.Dismiss(); return; }
+        if (_quickHistory?.IsOpen == true) { _quickHistory.Dismiss(); return; }
+        var pasteTarget = PasteTarget.Capture();
+        _quickOpening = true;
+        try
+        {
+            var previous = _quickHistory;
+            _quickHistory = null;
+            previous?.Shutdown();
+            _quickHistory = new QuickHistoryWindow(_viewModel, pasteTarget);
+            await _quickHistory.ToggleAsync();
+        }
+        catch (Exception ex)
+        {
+#if DEBUG
+            if (Environment.GetEnvironmentVariable("CLIPFLOW_TEST_DATA_ROOT") is not null)
+                await File.WriteAllTextAsync(Path.Combine(_viewModel.Store.RootPath, "picker-errors.txt"), ex.ToString());
+#endif
+            _quickHistory?.Dismiss(); _viewModel.ReportError(ex);
+        }
+        finally { _quickOpening = false; }
     }
     private void CaptionMinimize_Click(object sender, RoutedEventArgs e)
     {
@@ -102,10 +148,25 @@ public sealed partial class MainWindow : Window
     {
         Root.Loaded -= OnLoaded;
         PaneFooterText.Visibility = Navigation.IsPaneOpen ? Visibility.Visible : Visibility.Collapsed;
-        await _viewModel.InitializeAsync();
+        await InitializeWindowAsync();
         if (!_tray.IsAvailable) ShowNotice("系统托盘暂不可用，关闭窗口将退出应用。", true);
 #if DEBUG
-        if (Environment.GetEnvironmentVariable("CLIPFLOW_SELF_TEST") == "chrome-check" && Environment.GetEnvironmentVariable("CLIPFLOW_TEST_DATA_ROOT") is not null)
+        if (Environment.GetEnvironmentVariable("CLIPFLOW_SELF_TEST") == "quick-check" && Environment.GetEnvironmentVariable("CLIPFLOW_TEST_DATA_ROOT") is not null)
+        {
+            await Diagnostics.QuickFeaturesScenario.RunAsync(_viewModel, this, Root, () => _quickHistory, NavigateForTest);
+            await ExitAsync();
+        }
+        else if (Environment.GetEnvironmentVariable("CLIPFLOW_SELF_TEST") == "startup-check" && Environment.GetEnvironmentVariable("CLIPFLOW_TEST_DATA_ROOT") is not null)
+        {
+            NavigateForTest("settings");
+            if (await Diagnostics.StartupScenario.CheckNativeAsync(_viewModel, Root))
+            {
+                await Diagnostics.TrayScenario.RunAsync(_viewModel, this, _tray);
+                _tray.RequestExitForTest();
+            }
+            else await ExitAsync();
+        }
+        else if (Environment.GetEnvironmentVariable("CLIPFLOW_SELF_TEST") == "chrome-check" && Environment.GetEnvironmentVariable("CLIPFLOW_TEST_DATA_ROOT") is not null)
         {
             try
             {
@@ -118,7 +179,8 @@ public sealed partial class MainWindow : Window
         {
             await Diagnostics.IntegrationScenario.RunAsync(_viewModel, Root, NavigateForTest,
                 ResizeInDips, CreateDetailDialog,
-                () => Diagnostics.BackdropScenario.RunAsync(this, _themes, Root, _viewModel.Store.RootPath), RestoreWindow);
+                () => Diagnostics.BackdropScenario.RunAsync(this, _themes, Root, _viewModel.Store.RootPath), RestoreWindow,
+                setText => Diagnostics.FeatureScenario.RunAsync(_viewModel, this, _themes, Root, setText, NavigateForTest));
             await ExitAsync();
         }
         else if (Environment.GetEnvironmentVariable("CLIPFLOW_SELF_TEST") == "restart-check" && Environment.GetEnvironmentVariable("CLIPFLOW_TEST_DATA_ROOT") is not null)
@@ -138,6 +200,26 @@ public sealed partial class MainWindow : Window
         }
 #endif
     }
+    private Task? _initialization;
+    private Task InitializeWindowAsync() => _initialization ??= InitializeCoreAsync();
+    private async Task InitializeCoreAsync()
+    {
+        await _viewModel.InitializeAsync();
+        await _viewModel.RefreshStartupAsync();
+    }
+    internal async Task StartInBackgroundAsync()
+    {
+        Root.Loaded -= OnLoaded;
+        await InitializeWindowAsync();
+        if (_tray.IsAvailable) AppWindow.Hide(); else Activate();
+    }
+#if DEBUG
+    internal async Task CheckBackgroundForTestAsync()
+    {
+        try { await Diagnostics.StartupScenario.CheckBackgroundAsync(_viewModel, this, _tray, _themes); }
+        finally { await ExitAsync(); }
+    }
+#endif
     internal void RestoreWindow()
     {
         if (_exiting) return;

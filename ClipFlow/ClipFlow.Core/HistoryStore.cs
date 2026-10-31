@@ -2,7 +2,7 @@ namespace ClipFlow.Core;
 
 public sealed class HistoryStore
 {
-    public const int SchemaVersion = 2;
+    public const int SchemaVersion = 3;
     public string RootPath { get; }
     public string DatabasePath => Path.Combine(RootPath, "history.db");
     public string ImagesPath => Path.Combine(RootPath, "images");
@@ -52,6 +52,12 @@ public sealed class HistoryStore
                 db.Execute("CREATE INDEX idx_kind ON entries(kind,copied_at DESC)");
                 db.Execute("PRAGMA user_version=2");
             }
+            if (version < 3)
+            {
+                db.Execute("ALTER TABLE entries ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0");
+                db.Execute("CREATE INDEX idx_favorite_pinned ON entries(favorite,pinned DESC,copied_at DESC)");
+                db.Execute("PRAGMA user_version=3");
+            }
         });
         Directory.CreateDirectory(ImagesPath);
         _ready = true;
@@ -59,10 +65,10 @@ public sealed class HistoryStore
         return true;
     }, true);
 
-    private const string Columns = "id,kind,text,hash,image_path,thumbnail_path,width,height,created_at,copied_at,favorite";
+    private const string Columns = "id,kind,text,hash,image_path,thumbnail_path,width,height,created_at,copied_at,favorite,pinned";
     private static ClipboardRecord Record(object?[] r) => new((string)r[0]!, (ContentKind)(long)r[1]!, (string?)r[2], (string)r[3]!,
         (string?)r[4], (string?)r[5], (int)(long)r[6]!, (int)(long)r[7]!,
-        DateTimeOffset.FromUnixTimeMilliseconds((long)r[8]!), DateTimeOffset.FromUnixTimeMilliseconds((long)r[9]!), (long)r[10]! != 0);
+        DateTimeOffset.FromUnixTimeMilliseconds((long)r[8]!), DateTimeOffset.FromUnixTimeMilliseconds((long)r[9]!), (long)r[10]! != 0, (long)r[11]! != 0);
     public Task<List<ClipboardRecord>> LoadAsync() => RunAsync(db => db.Query($"SELECT {Columns} FROM entries ORDER BY copied_at DESC,id DESC").Select(Record).ToList());
     public Task<ClipboardRecord> SaveAsync(CapturedContent content, int limit) => RunAsync(db =>
     {
@@ -96,7 +102,8 @@ public sealed class HistoryStore
         File.Move(temporary, path, true);
     }
     private static void Prune(NativeSqlite db, int limit) => db.Execute("DELETE FROM entries WHERE id IN (SELECT id FROM entries ORDER BY copied_at DESC,id DESC LIMIT -1 OFFSET ?)", Math.Clamp(limit, 10, 10000));
-    public Task<bool> SetFavoriteAsync(string id, bool favorite) => RunAsync(db => { db.Execute("UPDATE entries SET favorite=? WHERE id=?", favorite, id); return true; });
+    public Task<bool> SetFavoriteAsync(string id, bool favorite) => RunAsync(db => { db.Execute("UPDATE entries SET favorite=?,pinned=CASE WHEN ? THEN pinned ELSE 0 END WHERE id=?", favorite, favorite, id); return true; });
+    public Task<bool> SetPinnedAsync(string id, bool pinned) => RunAsync(db => { db.Execute("UPDATE entries SET pinned=? WHERE id=? AND favorite=1", pinned, id); return true; });
     public Task<bool> TouchAsync(string id) => RunAsync(db => { db.Execute("UPDATE entries SET copied_at=MAX(?,(SELECT COALESCE(MAX(copied_at),0)+1 FROM entries)) WHERE id=?", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), id); return true; });
     public Task<bool> DeleteAsync(string id) => RunAsync(db => { db.Execute("DELETE FROM entries WHERE id=?", id); SweepFiles(db); return true; });
     public Task<AppSettings> LoadSettingsAsync() => RunAsync(db =>
@@ -105,13 +112,19 @@ public sealed class HistoryStore
         var theme = values.TryGetValue("theme", out var t) && Enum.TryParse<ThemeMode>(t, out var mode) && Enum.IsDefined(mode) ? mode : ThemeMode.System;
         var enabled = !values.TryGetValue("recording", out var e) || e != "False";
         var limit = values.TryGetValue("limit", out var l) && int.TryParse(l, out var n) ? Math.Clamp(n, 10, 10000) : 500;
-        return new AppSettings(theme, enabled, limit);
+        var backdrop = values.TryGetValue("backdrop", out var b) && Enum.TryParse<BackdropLevel>(b, out var level) && Enum.IsDefined(level) ? level : BackdropLevel.Strong;
+        var sort = values.TryGetValue("favorite_sort", out var f) && Enum.TryParse<FavoriteSortMode>(f, out var order) && Enum.IsDefined(order) ? order : FavoriteSortMode.RecentCopy;
+        var modifiers = values.TryGetValue("hotkey_modifiers", out var hm) && uint.TryParse(hm, out var m) && m is > 0 and <= 7 ? m : 1u;
+        var key = values.TryGetValue("hotkey_key", out var hk) && uint.TryParse(hk, out var k) && (k is >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A or >= 0x70 and <= 0x7A) ? k : 0x56u;
+        return new AppSettings(theme, enabled, limit, backdrop, sort, modifiers, key);
     });
     public Task<bool> SaveSettingsAsync(AppSettings settings) => RunAsync(db =>
     {
         db.Transaction(() =>
         {
-            foreach (var pair in new[] { ("theme", settings.Theme.ToString()), ("recording", settings.RecordingEnabled.ToString()), ("limit", Math.Clamp(settings.HistoryLimit, 10, 10000).ToString()) })
+            db.Execute("INSERT INTO settings(key,value) VALUES('hotkey_modifiers',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", settings.HotkeyModifiers.ToString());
+            db.Execute("INSERT INTO settings(key,value) VALUES('hotkey_key',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", settings.HotkeyKey.ToString());
+            foreach (var pair in new[] { ("theme", settings.Theme.ToString()), ("recording", settings.RecordingEnabled.ToString()), ("limit", Math.Clamp(settings.HistoryLimit, 10, 10000).ToString()), ("backdrop", settings.Backdrop.ToString()), ("favorite_sort", settings.FavoriteSort.ToString()) })
                 db.Execute("INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", pair.Item1, pair.Item2);
             Prune(db, settings.HistoryLimit);
         });

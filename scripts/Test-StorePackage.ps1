@@ -91,7 +91,7 @@ try {
         $manifest.Package.Identity.Name -eq $storeIdentity.Name -and
         $manifest.Package.Identity.Name -eq $source.Package.Identity.Name -and
         $manifest.Package.Identity.Publisher -eq $storeIdentity.Publisher -and
-        $manifest.Package.Identity.Version -eq '1.0.0.0' -and
+        $manifest.Package.Identity.Version -eq $source.Package.Identity.Version -and
         $manifest.Package.Identity.ProcessorArchitecture -eq 'x64'
     ) 'Packaged identity/version/architecture match Partner Center configuration'
 
@@ -114,6 +114,8 @@ try {
         $caps[0].Name -eq 'runFullTrust'
     ) 'Packaged capabilities contain only runFullTrust'
 
+    $startup=@($manifest.GetElementsByTagName('StartupTask','http://schemas.microsoft.com/appx/manifest/desktop/windows10'))
+    Assert-Package ($startup.Count -eq 1 -and $startup[0].TaskId -eq 'ClipFlowStartup' -and $startup[0].Enabled -eq 'false' -and $startup[0].ParentNode.Executable -eq 'ClipFlow.exe' -and $names -contains $startup[0].ParentNode.Executable) 'Packaged StartupTask defaults off and resolves to ClipFlow.exe'
     $application = $manifest.Package.Applications.Application
     $visual = $manifest.GetElementsByTagName(
         'VisualElements',

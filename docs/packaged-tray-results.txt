@@ -1,0 +1,11 @@
+PASS: Shell icon registered; native menu contains app/version, open, recording toggle, exit
+PASS: system close hides window; real clipboard capture continues while hidden
+PASS: acrylic popup survives duplicate callbacks; Escape and Alt+F4 dismiss it and allow reopening
+PASS: real tray checkbox clicks enable/disable the native StartupTask and synchronize settings
+PASS: real mouse clicks pause/resume while hidden; capture stops, settings persist, UI/menu labels stay synchronized
+PASS: real mouse click on native Open menu item restores the hidden main window
+PASS: visible-window popup stays open and closes without changing main window visibility
+PASS: tray selection callback restores window
+PASS: relaunch restores the hidden instance and avoids a second recorder
+PASS: taskbar recreation callback preserves icon availability
+SUCCESS

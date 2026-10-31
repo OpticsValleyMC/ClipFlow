@@ -1,0 +1,4 @@
+PASS: startup activation path initializes storage and tray without showing the main window
+PASS: real clipboard text is persisted while the never-shown main window remains hidden
+PASS: first user activation restores the initialized window and background history
+SUCCESS

@@ -19,11 +19,13 @@ function Assert-Brand([bool]$condition, [string]$message) {
 Add-Type -AssemblyName System.Drawing
 
 $version = [Diagnostics.FileVersionInfo]::GetVersionInfo((Join-Path $repoPath $Executable))
+[xml]$props = Get-Content -LiteralPath (Join-Path $repoPath 'ClipFlow/Directory.Build.props')
+$expectedVersion=[string]$props.Project.PropertyGroup.FileVersion
 
 Assert-Brand (
-    $version.FileVersion -eq '1.0.0.0' -and
-    $version.ProductVersion -eq '1.0.0.0'
-) 'Executable file/product version is exactly 1.0.0.0'
+    $version.FileVersion -eq $expectedVersion -and
+    $version.ProductVersion -eq $expectedVersion
+) "Executable file/product version is exactly $expectedVersion"
 
 Assert-Brand (
     $version.CompanyName -eq 'OpticsValley' -and
@@ -34,13 +36,13 @@ Assert-Brand (
 
 Assert-Brand (
     $props.Project.PropertyGroup.Authors -eq 'OpticsValley' -and
-    $props.Project.PropertyGroup.AssemblyVersion -eq '1.0.0.0'
+    $props.Project.PropertyGroup.AssemblyVersion -eq $expectedVersion
 ) 'Project author and assembly version configured centrally'
 
 [xml]$manifest = Get-Content -LiteralPath (Join-Path $repoPath 'ClipFlow/ClipFlow/Package.appxmanifest')
 
 Assert-Brand (
-    $manifest.Package.Identity.Version -eq '1.0.0.0' -and
+    $manifest.Package.Identity.Version -eq $expectedVersion -and
     $manifest.Package.Properties.PublisherDisplayName -eq 'OpticsValley'
 ) 'Package manifest version and publisher display name match'
 

@@ -16,6 +16,30 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<RecordViewModel> Records { get; } = [];
     public AppSettings Settings { get; private set; } = new();
     public event Action<ThemeMode>? ThemeChanged;
+    public event Action<AppSettings>? AppearanceChanged;
+    public Func<uint, uint, bool>? RegisterShortcut { get; set; }
+    public string ShortcutLabel => HotkeyService.Label(Settings.HotkeyModifiers, Settings.HotkeyKey);
+    public string ShortcutStatus { get; private set; } = "";
+    internal void SetShortcutStatus(string text) { ShortcutStatus = text; Raise(nameof(ShortcutStatus)); }
+    public async Task ChangeShortcutAsync(uint modifiers, uint key)
+    {
+        if (modifiers == 2 && key == 0x56) throw new InvalidOperationException("Ctrl + V 用于粘贴，请选择其他快捷键");
+        if (RegisterShortcut?.Invoke(modifiers, key) != true) throw new InvalidOperationException("此快捷键已被占用或不可用，请换一个组合");
+        var previous = Settings;
+        try { await UpdateSettingsAsync(Settings with { HotkeyModifiers = modifiers, HotkeyKey = key }); }
+        catch { RegisterShortcut(previous.HotkeyModifiers, previous.HotkeyKey); Settings = previous; SettingsChanged(); throw; }
+    }
+    public StartupService Startup { get; } = new();
+    private StartupSnapshot _startup = new(false, false, "正在读取 Windows 启动设置…");
+    private int _startupOperations;
+    private Task? _startupRefresh;
+    public bool StartupEnabled
+    {
+        get => _startup.Enabled;
+        set { if (value != _startup.Enabled && CanChangeStartup) _ = ApplyStartupFromBindingAsync(value); }
+    }
+    public bool CanChangeStartup => _startupOperations == 0 && _startup.CanChange;
+    public string StartupDescription => _startup.Description;
     public event Action<string, bool>? Notice;
     public Func<RecordViewModel, Task>? DetailRequested { get; set; }
     public Func<bool, Task<bool>>? ConfirmClear { get; set; }
@@ -35,8 +59,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public string PageTitle => _page switch { "favorites" => "收藏夹", "settings" => "设置", _ => "最近记录" };
     public string PageSubtitle => _page switch
     {
-        "favorites" => "留住灵感，让重要内容随手可得。",
-        _ => "复制过的内容，都在这里。"
+        "favorites" => "留住灵感，让重要内容随手可得",
+        _ => "复制过的内容，都在这里"
     };
     public Visibility HistoryVisibility => _page == "settings" ? Visibility.Collapsed : Visibility.Visible;
     public Visibility SettingsVisibility => _page == "settings" ? Visibility.Visible : Visibility.Collapsed;
@@ -52,9 +76,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public Visibility ClearHistoryVisibility => _page == "recent" ? Visibility.Visible : Visibility.Collapsed;
     public string Search { get => _search; set { if (Set(ref _search, value)) Filter(); } }
     public int TypeFilter { get => _typeFilter; set { if (Set(ref _typeFilter, value)) Filter(); } }
-    public int ThemeIndex => (int)Settings.Theme;
-    public bool RecordingEnabled => IsReady && Settings.RecordingEnabled;
+    public int ThemeIndex { get => (int)Settings.Theme; set { if (value is >= 0 and <= 2 && value != ThemeIndex) _ = ApplySettingsFromBindingAsync(Settings with { Theme = (ThemeMode)value }); } }
+    public int BackdropIndex { get => (int)Settings.Backdrop; set { if (value is >= 0 and <= 3 && value != BackdropIndex) _ = ApplySettingsFromBindingAsync(Settings with { Backdrop = (BackdropLevel)value }); } }
+    public int FavoriteSortIndex { get => (int)Settings.FavoriteSort; set { if (value is >= 0 and <= 2 && value != FavoriteSortIndex) _ = ChangeSortAsync((FavoriteSortMode)value); } }
+    public Visibility FavoritesVisibility => _page == "favorites" ? Visibility.Visible : Visibility.Collapsed;
+    public bool IsFavoritesPage => _page == "favorites";
+    public bool RecordingEnabled { get => IsReady && Settings.RecordingEnabled; set { if (IsReady && value != Settings.RecordingEnabled) _ = ApplySettingsFromBindingAsync(Settings with { RecordingEnabled = value }); } }
     public int HistoryLimit => Settings.HistoryLimit;
+    public double HistoryLimitValue { get => Settings.HistoryLimit; set { if (double.IsFinite(value) && value != Settings.HistoryLimit) _ = ApplySettingsFromBindingAsync(Settings with { HistoryLimit = (int)Math.Clamp(value, 10, 10000) }); } }
     public AsyncCommand ToggleRecordingCommand { get; }
     public AsyncCommand ClearHistoryCommand { get; }
     public AsyncCommand ClearDataCommand { get; }
@@ -94,7 +123,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public void Navigate(string page)
     {
         _page = page is "favorites" or "settings" ? page : "recent"; _typeFilter = 0; _search = "";
-        foreach (var property in new[] { nameof(PageTitle), nameof(PageSubtitle), nameof(HistoryVisibility), nameof(SettingsVisibility), nameof(ClearHistoryVisibility), nameof(SearchPlaceholder), nameof(Search), nameof(TypeFilter) }) Raise(property);
+        foreach (var property in new[] { nameof(PageTitle), nameof(PageSubtitle), nameof(HistoryVisibility), nameof(SettingsVisibility), nameof(ClearHistoryVisibility), nameof(SearchPlaceholder), nameof(Search), nameof(TypeFilter), nameof(FavoritesVisibility) }) Raise(property);
         Filter();
     }
     private async Task SaveCaptureAsync(CapturedContent content) => await ExclusiveAsync(async () =>
@@ -116,9 +145,15 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
     private void Filter()
     {
+        foreach (var item in _all) item.RefreshPage();
         var filtered = _all.Where(r => (_page != "favorites" || r.Record.IsFavorite)
             && (_typeFilter == 0 || r.Record.Kind == (_typeFilter == 1 ? ContentKind.Text : ContentKind.Image))
             && (string.IsNullOrEmpty(Search) || r.Record.Text?.Contains(Search, StringComparison.OrdinalIgnoreCase) == true)).ToList();
+        if (IsFavoritesPage)
+        {
+            var byId = filtered.ToDictionary(r => r.Id);
+            filtered = FavoriteOrdering.Apply(filtered.Select(r => r.Record), Settings.FavoriteSort).Select(r => byId[r.Id]).ToList();
+        }
         var ids = filtered.Select(r => r.Id).ToHashSet();
         for (var i = Records.Count - 1; i >= 0; i--) if (!ids.Contains(Records[i].Id)) Records.RemoveAt(i);
         for (var i = 0; i < filtered.Count; i++)
@@ -133,13 +168,46 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public Task CopyAsync(RecordViewModel item) => ExclusiveAsync(async () =>
     {
         await _clipboard.CopyAsync(item.Record, Store);
+        _ = item.MarkCopiedAsync();
         await Store.TouchAsync(item.Id); await ReloadAsync();
-        Notice?.Invoke("已复制到剪贴板", false);
     });
     public Task FavoriteAsync(RecordViewModel item) => ExclusiveAsync(async () =>
     {
         await Store.SetFavoriteAsync(item.Id, !item.Record.IsFavorite); await ReloadAsync();
     });
+    public Task PinAsync(RecordViewModel item) => ExclusiveAsync(async () =>
+    {
+        await Store.SetPinnedAsync(item.Id, !item.Record.IsPinned); await ReloadAsync();
+    });
+    private async Task ChangeSortAsync(FavoriteSortMode sort)
+    {
+        try { await UpdateSettingsAsync(Settings with { FavoriteSort = sort }); }
+        catch (Exception ex) { ReportError(ex); }
+    }
+    public Task RefreshStartupAsync() => _startupRefresh is { IsCompleted: false } pending ? pending : _startupRefresh = RefreshStartupCoreAsync();
+    private async Task RefreshStartupCoreAsync()
+    {
+        _startupOperations++; Raise(nameof(CanChangeStartup));
+        try { _startup = await Startup.RefreshAsync(); }
+        finally { _startupOperations--; RaiseStartup(); }
+    }
+    public async Task SetStartupAsync(bool enabled)
+    {
+        if (!CanChangeStartup) return;
+        _startupOperations++; Raise(nameof(CanChangeStartup));
+        try { _startup = await Startup.SetEnabledAsync(enabled); }
+        finally { _startupOperations--; RaiseStartup(); }
+    }
+    private void RaiseStartup()
+    { Raise(nameof(StartupEnabled)); Raise(nameof(CanChangeStartup)); Raise(nameof(StartupDescription)); }
+    private async Task ApplyStartupFromBindingAsync(bool enabled)
+    {
+        try { await SetStartupAsync(enabled); } catch (Exception ex) { ReportError(ex); }
+    }
+    private async Task ApplySettingsFromBindingAsync(AppSettings settings)
+    {
+        try { await UpdateSettingsAsync(settings); } catch (Exception ex) { ReportError(ex); }
+    }
     public Task DeleteAsync(RecordViewModel item) => ExclusiveAsync(async () =>
     {
         await Store.DeleteAsync(item.Id); await ReloadAsync(); Notice?.Invoke("记录已删除", false);
@@ -154,8 +222,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
     private void SettingsChanged()
     {
-        foreach (var name in new[] { nameof(ThemeIndex), nameof(RecordingEnabled), nameof(HistoryLimit), nameof(RecordingLabel), nameof(RecordingButton), nameof(RecordingSeverity) }) Raise(name);
+        Raise(nameof(ShortcutLabel));
+        foreach (var name in new[] { nameof(ThemeIndex), nameof(BackdropIndex), nameof(FavoriteSortIndex), nameof(RecordingEnabled), nameof(HistoryLimit), nameof(HistoryLimitValue), nameof(RecordingLabel), nameof(RecordingButton), nameof(RecordingSeverity) }) Raise(name);
         ThemeChanged?.Invoke(Settings.Theme);
+        AppearanceChanged?.Invoke(Settings);
     }
     private async Task ClearAsync(bool allData)
     {

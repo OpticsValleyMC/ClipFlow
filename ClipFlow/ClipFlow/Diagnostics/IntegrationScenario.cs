@@ -16,7 +16,8 @@ namespace ClipFlow.Diagnostics;
 internal static class IntegrationScenario
 {
     public static async Task RunAsync(MainViewModel vm, FrameworkElement root, Action<string> navigate, Action<int,int> resize,
-        Func<RecordViewModel, ContentDialog> createDetailDialog, Func<Task> checkBackdrop, Action activateWindow)
+        Func<RecordViewModel, ContentDialog> createDetailDialog, Func<Task> checkBackdrop, Action activateWindow,
+        Func<Func<string, Task>, Task> checkFeatures)
     {
         var report = new List<string>();
         var rootPath = vm.Store.RootPath;
@@ -376,6 +377,7 @@ internal static class IntegrationScenario
             });
             await SetTextAsync("一个更轻松的复制空间。\nClipFlow 使用 WinUI 3 原生控件，将文字与图片保存在本机。");
             await WaitAsync(() => vm.Records.Count == 3);
+            await CheckAsync("startup state policy, adjustable backdrop, favorite pin/order and restart persistence", () => checkFeatures(SetTextAsync));
             await CheckAsync("light, dark, system themes and layout renders", async () =>
             {
                 ((InfoBar)root.FindName("Feedback")).IsOpen = false;
@@ -454,7 +456,7 @@ internal static class IntegrationScenario
         catch (Exception ex) { report.Add("FAIL: " + ex); }
         await File.WriteAllLinesAsync(Path.Combine(vm.Store.RootPath, "restart-results.txt"), report);
     }
-    private static async Task RenderAsync(FrameworkElement root, string path)
+    internal static async Task RenderAsync(FrameworkElement root, string path)
     {
         // RenderTargetBitmap omits the compositor's Mica surface. Render the real theme fallback behind XAML.
         var fallback = root.FindName("RenderBackdrop") as FrameworkElement;

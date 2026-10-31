@@ -39,9 +39,10 @@ if ($identity.Publisher -eq 'CN=OpticsValley') {
 }
 
 Assert-Release (
-    $identity.Version -eq '1.0.0.0' -and
-    $version.Project.PropertyGroup.FileVersion -eq $identity.Version
-) 'Manifest and binary version agree: 1.0.0.0'
+    $identity.Version -match '^\d+\.\d+\.\d+\.\d+$' -and
+    $version.Project.PropertyGroup.FileVersion -eq $identity.Version -and
+    $version.Project.PropertyGroup.AssemblyVersion -eq $identity.Version
+) "Manifest and binary version agree: $($identity.Version)"
 
 $expectedDisplayName = if ($identity.Publisher -eq $storeIdentity.Publisher) {
     $storeIdentity.DisplayName
@@ -63,6 +64,9 @@ Assert-Release (
     $family.Name -eq 'Windows.Desktop' -and
     $family.MinVersion -eq '10.0.19041.0'
 ) 'Windows 10 desktop minimum is build 19041'
+
+$startup=@($manifest.GetElementsByTagName('StartupTask','http://schemas.microsoft.com/appx/manifest/desktop/windows10'))
+Assert-Release ($startup.Count -eq 1 -and $startup[0].TaskId -eq 'ClipFlowStartup' -and $startup[0].Enabled -eq 'false' -and $startup[0].ParentNode.Executable -eq 'ClipFlow.exe') 'StartupTask uses the packaged executable, defaults off and remains Windows-managed'
 
 $capabilities = @($manifest.Package.Capabilities.ChildNodes | Where-Object NodeType -eq Element)
 

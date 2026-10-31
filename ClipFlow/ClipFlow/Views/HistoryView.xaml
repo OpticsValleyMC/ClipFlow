@@ -24,6 +24,9 @@
         <Grid Grid.Row="2">
             <TextBlock Text="{Binding CountLabel}" VerticalAlignment="Center" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
             <Button x:Name="ClearHistoryButton" Content="清空历史" Command="{Binding ClearHistoryCommand}" HorizontalAlignment="Right" IsEnabled="{Binding CanClearHistory}" Visibility="{Binding ClearHistoryVisibility}"/>
+            <ComboBox x:Name="FavoriteSortBox" SelectedIndex="{Binding FavoriteSortIndex, Mode=TwoWay}" HorizontalAlignment="Right" Width="168" Visibility="{Binding FavoritesVisibility}" IsEnabled="{Binding IsReady}" AutomationProperties.Name="收藏排序">
+                <ComboBoxItem Content="最近复制优先"/><ComboBoxItem Content="最早复制优先"/><ComboBoxItem Content="按内容名称排序"/>
+            </ComboBox>
         </Grid>
         <ListView x:Name="HistoryList" Grid.Row="3" ItemsSource="{Binding Records}" SelectionMode="None" IsItemClickEnabled="False"
             HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"

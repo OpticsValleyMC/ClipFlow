@@ -11,6 +11,7 @@ PASS: native mouse wheel zoom in/out, pointer anchor, min/max bounds, empty marg
 PASS: HD thumbnail, original image zoom and corrupt original recovery
 PASS: image aspect-fit, centered portrait, zoom buttons and narrow preview
 PASS: occupied clipboard retries and subsequent events recover
+PASS: startup state policy, adjustable backdrop, favorite pin/order and restart persistence
 PASS: light, dark, system themes and layout renders
 PASS: image deletion removes both files
 PASS: restart storage

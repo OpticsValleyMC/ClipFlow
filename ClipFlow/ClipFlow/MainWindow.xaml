@@ -75,7 +75,7 @@
                     </InfoBar>
                 </StackPanel>
                 <views:HistoryView x:Name="HistoryContent" Grid.Row="1" Visibility="{Binding HistoryVisibility}"/>
-                <views:SettingsView Grid.Row="1" Visibility="{Binding SettingsVisibility}"/>
+                <views:SettingsView x:Name="SettingsContent" Grid.Row="1" Visibility="{Binding SettingsVisibility}"/>
             </Grid>
         </NavigationView>
     </Grid>

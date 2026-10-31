@@ -5,13 +5,32 @@ namespace ClipFlow.Core;
 
 public enum ContentKind { Text, Image }
 public enum ThemeMode { System, Light, Dark }
-public sealed record AppSettings(ThemeMode Theme = ThemeMode.System, bool RecordingEnabled = true, int HistoryLimit = 500);
+public enum BackdropLevel { Solid, Subtle, Standard, Strong }
+public enum FavoriteSortMode { RecentCopy, OldestCopy, Content }
+public sealed record AppSettings(ThemeMode Theme = ThemeMode.System, bool RecordingEnabled = true, int HistoryLimit = 500,
+    BackdropLevel Backdrop = BackdropLevel.Strong, FavoriteSortMode FavoriteSort = FavoriteSortMode.RecentCopy,
+    uint HotkeyModifiers = 1, uint HotkeyKey = 0x56);
 public sealed record ClipboardRecord(string Id, ContentKind Kind, string? Text, string Hash,
     string? ImagePath, string? ThumbnailPath, int Width, int Height,
-    DateTimeOffset CreatedAt, DateTimeOffset CopiedAt, bool IsFavorite);
+    DateTimeOffset CreatedAt, DateTimeOffset CopiedAt, bool IsFavorite, bool IsPinned = false);
 public sealed record CapturedContent(ContentKind Kind, string? Text, string Hash,
     string? ImagePath = null, string? ThumbnailPath = null, int Width = 0, int Height = 0,
     byte[]? ImagePng = null, byte[]? ThumbnailPng = null);
+
+public static class FavoriteOrdering
+{
+    public static IEnumerable<ClipboardRecord> Apply(IEnumerable<ClipboardRecord> records, FavoriteSortMode mode)
+    {
+        var pinned = records.Where(r => r.IsFavorite).OrderByDescending(r => r.IsPinned);
+        var ordered = mode switch
+        {
+            FavoriteSortMode.OldestCopy => pinned.ThenBy(r => r.CopiedAt),
+            FavoriteSortMode.Content => pinned.ThenBy(r => r.Text ?? "图片", StringComparer.CurrentCultureIgnoreCase).ThenByDescending(r => r.CopiedAt),
+            _ => pinned.ThenByDescending(r => r.CopiedAt)
+        };
+        return ordered.ThenBy(r => r.Id, StringComparer.Ordinal);
+    }
+}
 
 public static class ContentIdentity
 {

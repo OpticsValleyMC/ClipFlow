@@ -1,39 +1,62 @@
-# 发布前最终验收
+# ClipFlow 1.1.0.0 最终验收
 
-日期：2026-10-11。ClipFlow 1.0.0.0，作者 OpticsValley。实际运行环境：Windows 11 build 26300 x64、150% DPI、Windows App SDK 2.2.0。
+日期：2026-10-31。作者：OpticsValley。当前验收环境为 Windows 11 x64；最低系统为 Windows 10 2004 / build 19041。
+
+## 本轮功能
+
+- 新增默认 Alt+V 全局快捷键和快捷粘贴浮窗。支持自定义快捷键、保存及冲突处理，保留标准 Ctrl+V 粘贴操作。
+- 浮窗支持原生标题区域拖动、独立搜索、收藏筛选、逐项收藏与删除、键盘选择及 Esc 关闭。点击或按 Enter 后恢复原输入焦点并自动粘贴；受系统限制时提供反馈。
+- 调整浮窗标签、关闭按钮、卡片悬浮效果、滚动条位置及滚轮响应；保留收藏与更多按钮的悬浮反馈。
+- 复制成功后按钮短暂显示绿色勾选；失败时不显示成功。搜索关键词高亮，长文本预览可显示靠后的匹配内容。
+- 托盘采用标准 WinUI MenuFlyout 控件；修复被托盘溢出面板遮挡、反复打开及开机启动勾选位置问题。暂停图标和设置文案同步优化。
+- 安装版使用 Windows StartupTask，默认关闭。设置页与托盘同步系统状态，后台启动先初始化存储、采集和托盘，主动打开后才显示主窗口。
+- 收藏支持置顶和排序，数据库 v3 迁移保留旧数据。背景支持纯色与三档云母效果，并持久保存设置。
+- 版本统一为 1.1.0.0，更新使用、隐私及 Store 发布文档和验收脚本。
+
+## 本次自动验收结果
+
+| 验收项目 | 结果 |
+| --- | --- |
+| 核心验收 | 35 项通过，涵盖数据库迁移、去重、收藏排序、图片、设置与异常恢复 |
+| 常规桌面集成 | 通过，含文本、长文本、图片、鼠标缩放与平移、主题、背景、收藏及清空 |
+| 兼容外观集成 | 通过，含重启、存储恢复与托盘 |
+| 快捷功能与浮窗 | 25 项通过，含真实快捷键、拖动、焦点恢复、鼠标/Enter 粘贴、收藏删除及滚轮响应 |
+| 标题栏与材质 | 常规及兼容模式均通过 |
+| 托盘 | 多轮通过，含勾选对齐、顶层遮挡、真实鼠标操作、取消重开、单实例与任务栏重建 |
+| 独立 MSIX 自启动 | 实际 StartupTask 注册、默认关闭、设置启停与外部状态刷新均通过 |
+| 后台启动 | 隐藏初始化、隐藏采集、首次打开恢复均通过；临时验收包已移除 |
+| Release | 构建零警告、零错误；7 项真实进程冒烟通过 |
+| 品牌与发布源检查 | 版本、图标、清单、权限、资源及源代码检查通过 |
+| Store 上传包 | Release x64 包和符号文件已生成，身份、内容与 MakeAppx 验证通过 |
+| Git | diff 空白检查通过；未暂存、未提交 |
+
+运行命令：
+
+```powershell
+./scripts/Test.ps1 -Integration -BuildOutputDirectory artifacts/full-debug
+./scripts/Test.ps1 -Integration -LegacyChrome -BuildOutputDirectory artifacts/full-debug
+./scripts/Test-QuickFeatures.ps1 -SkipBuild -BuildOutputDirectory artifacts/full-debug
+./scripts/Test-TitleBar.ps1 -BuildOutputDirectory artifacts/full-debug
+./scripts/Test-TitleBar.ps1 -LegacyChrome -BuildOutputDirectory artifacts/full-debug
+./scripts/Test-PackagedStartup.ps1
+./scripts/Test-ReleaseReadiness.ps1
+./scripts/Build.ps1 -Configuration Release -OutputDirectory artifacts/full-release
+./scripts/Smoke-Release.ps1 -Executable artifacts/full-release/ClipFlow.exe
+./scripts/Test-BrandAssets.ps1 -Executable artifacts/full-release/ClipFlow.exe
+./scripts/Build-Store.ps1
+```
+
+集成脚本内部还运行重启及托盘验收；Store 构建脚本内部运行上传包验证。首次品牌检查指向旧的默认发布目录，因旧二进制版本不符而失败；随后已针对本次新构建的 Release 重新检查并通过。
 
 ## 本次交付
 
-- 图片预览支持普通鼠标滚轮放大/缩小，以鼠标位置为中心；保留 + / −、适应窗口、100%、左键拖动和原图高清显示。原生滚轮输入、锚点、单次事件不重复、上下限、空白区域及缩放后的双轴拖动均通过。
-- 最低系统配置为 Windows 10 2004 / build 19041。csproj、平台兼容分析最低版本、源清单和真实 MSIX 清单一致；编译 SDK 不变。维护者反馈旧版已在 Win10 实机启动。本轮修复 Win10 深色窗口顶部白条：采用主题一致的 WinUI 标题栏按钮，调用原生窗口操作，保留标题拖动、双击与关闭到托盘。Windows 11 保留 Mica Alt 和原系统按钮。详情见 [标题栏修复](WINDOWS10-TITLEBAR.md)。
-- 本轮强制 Win10 外观完整集成通过，报告含 17 条 PASS；重启及托盘通过，核心 27 项通过，新增标题栏专项 5 项通过。Win11 的三种主题、Mica/回退、后台恢复和托盘另行通过。本轮没有重复 Win11 完整 17 组，上一轮的正常路径完整报告仍保留。
-- Release 自包含发布成功，实际运行的 7 项冒烟全部通过：启动、托盘、关闭后台、单实例、恢复、退出及移除图标。品牌资源与版本/作者校验通过。
-- Store 上传包成功生成，包含 x64 MSIX 与 appxsym。实际包内 Partner Center 身份、1.0.0.0、最低系统 19041、图标、运行时、许可证、入口和唯一 runFullTrust 权限通过；MakeAppx 验证解包通过。约 99.2 MiB。
-- 工作区当前源清单保留本地开发签名 CN=OpticsValley。商店脚本独立生成 Publisher 为 CN=3F646DDF-EFA2-4801-82BE-82D7E5808841 的清单并核验真实包，不覆盖调试签名。名称尾部横线仍保留。
-- 全局路径扫描通过；新增 ARM64 发布配置的本地绝对目录已替换为相对目录。源码网络客户端扫描、许可证、隐私政策、贡献指南、忽略规则等发布检查通过。
-- MIT / OpticsValley、README 徽章、PRIVACY、CONTRIBUTING 及第三方许可均保留。测试数据仍隔离，Release 不含测试开关或诊断代码。
+- Store 上传文件：`artifacts/release-1.1.0.0/ClipFlow_1.1.0.0_x64.msixupload`。
+- SHA-256：`55BA679E70D3C48E1EA7868B89234F4EF2C28E23C5683FF2F8B0703D635CAD24`。
+- 测试与原始报告位置：`artifacts/release-1.1.0.0/VALIDATION.md`。
+- Git 提交草稿：`artifacts/release-1.1.0.0/GIT-COMMIT-MESSAGE.txt`。
 
-## 产物
-
-- 最新商店包：artifacts/release/ClipFlow_1.0.0.0_x64.msixupload。
-- 最新源码：artifacts/release/ClipFlow-1.0.0.0-source.zip。
-- 便携版：artifacts/publish/titlebar-win-x64/，需要分发整个目录；compat-win-x64 是上一轮旧版。
-- 校验和：artifacts/release/SHA256SUMS.txt。
-
-商店包 SHA-256：C5EE7D8360AC11201EB3B0AC44201C35CF90707F39A85905C48399EE78AA263B。
-
-本次原始商店包：artifacts/store-2e3fdc1da5e94f28a03e23ccbc7726f9/packages/ClipFlow_1.0.0.0_x64.msixupload。
-
-Partner Center 实际上传反馈表明，上一包的显示名称 ClipFlow 未被保留。本轮改为维护者截图中的保留名称 `ClipFlow - 剪贴板工具`，同步 Package/Properties 和应用 VisualElements。名称、Publisher 等商店身份集中到 scripts/StoreIdentity.json；新包检查通过，旧包在负向验证中正确被拒绝。版本仍为 1.0.0.0。本地包验证不能替代重新上传后的 Partner Center 结果。
-
-报告：[集成](integration-results.txt)、[重启](restart-results.txt)、[托盘](tray-results.txt)、[云母/回退](mica-results.txt)、[降级集成](legacy-integration-results.txt)、[降级重启](legacy-restart-results.txt)、[降级托盘](legacy-tray-results.txt)、[降级背景](legacy-mica-results.txt)、[Release 冒烟](release-smoke-results.txt)、[图标](brand-results.txt)、[包内检查](store-package-results.txt)。
-
-此前发布准备中已从干净源码在中文/空格路径构建通过，核心测试从其他工作目录通过。此轮没有再次执行干净机器安装/升级或远程 GitHub CI，不能算作本次重复验收。
+产物目录已由 .gitignore 排除；没有上传商店、暂存或提交 Git。
 
 ## 验收边界
 
-本机没有 Windows 10 实机或虚拟机。维护者提供的实机运行截图属于上一版，当前标题栏修复仍需在那里复核。旧系统外观路径在 Windows 11 上通过，并不等同于 Windows 10 的实际系统 DLL、驱动、签名包安装及升级验收。仍应在 Windows 10 22H2 x64 验证新版运行和安装/升级/卸载。
-
-尚未执行 WACK，尚未实际上传 Partner Center 或推送 GitHub。结构正确的上传包不等于商店认证通过。需要公开隐私政策 HTTPS URL、支持信息和商店展示资料；步骤见 [Store 发布指南](STORE-RELEASE.md)。部分本地构建存在 NU1900 网络警告，在线依赖漏洞审计尚未完成。
-
-本轮早期回归出现剪贴板超时和焦点/桌面遮挡问题。正常退出旧版并行实例、维护者解锁后，最终 Win10 分支完整集成、重启、托盘和新 Release 冒烟成功退出；失败记录没有计入通过数，没有删除断言或关闭输入保护。
+兼容外观在当前 Windows 11 桌面模拟，不替代 Windows 10 实体机验证。自启动验收验证实际任务和启动分支，没有注销或重启用户电脑。未执行 WACK、干净机器上的签名安装升级/卸载全流程或 Partner Center 上传；本地包结构验证不等于商店认证。

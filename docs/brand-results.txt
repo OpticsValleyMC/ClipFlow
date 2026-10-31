@@ -1,4 +1,4 @@
-﻿PASS: Executable file/product version is exactly 1.0.0.0
+PASS: Executable file/product version is exactly 1.1.0.0
 PASS: Executable author/company is OpticsValley and product is ClipFlow
 PASS: Project author and assembly version configured centrally
 PASS: Package manifest version and publisher display name match

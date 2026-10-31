@@ -1,0 +1,22 @@
+param([string]$BuildOutputDirectory, [switch]$SkipBuild)
+$ErrorActionPreference = 'Stop'
+$repoPath = Split-Path $PSScriptRoot -Parent
+if (!$BuildOutputDirectory) { $BuildOutputDirectory = Join-Path $repoPath 'artifacts/quick-debug' }
+$buildPath = [IO.Path]::GetFullPath($BuildOutputDirectory)
+if (!$SkipBuild) { & (Join-Path $PSScriptRoot 'Build.ps1') -OutputDirectory $buildPath }
+$testPath = Join-Path $repoPath ('artifacts/quick-' + [Guid]::NewGuid().ToString('N'))
+$oldData = $env:CLIPFLOW_TEST_DATA_ROOT
+$oldTest = $env:CLIPFLOW_SELF_TEST
+try {
+    $env:CLIPFLOW_TEST_DATA_ROOT = $testPath
+    $env:CLIPFLOW_SELF_TEST = 'quick-check'
+    $fixture = Start-Process -FilePath (Join-Path $buildPath 'ClipFlow.exe') -PassThru -WindowStyle Hidden
+    if (!$fixture.WaitForExit(45000)) { $fixture.Kill(); throw "Quick feature test timed out. Reports: $testPath" }
+    $report = Get-Content -LiteralPath (Join-Path $testPath 'quick-results.txt')
+    $report
+    if ($report -notcontains 'SUCCESS' -or $fixture.ExitCode -ne 0) { throw "Quick feature test failed. Reports: $testPath" }
+    Write-Output "Quick feature screenshots and report: $testPath"
+} finally {
+    $env:CLIPFLOW_TEST_DATA_ROOT = $oldData
+    $env:CLIPFLOW_SELF_TEST = $oldTest
+}

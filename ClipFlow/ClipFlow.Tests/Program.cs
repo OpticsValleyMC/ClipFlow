@@ -80,7 +80,54 @@ try
     var migrated = await migration.LoadAsync();
     Check(migrated.Count == 1 && migrated[0].Id == "new" && migrated[0].IsFavorite && migrated[0].Text == "legacy", "v1 migration preserves newest content and merges favorite");
     Check((await migration.LoadSettingsAsync()).Theme == ThemeMode.Dark, "migration preserves settings");
-    using (var db = new NativeSqlite(migration.DatabasePath)) Check(db.Scalar("PRAGMA user_version") == 2, "schema version");
+    using (var db = new NativeSqlite(migration.DatabasePath)) Check(db.Scalar("PRAGMA user_version") == HistoryStore.SchemaVersion, "schema version");
+    var v2 = new HistoryStore(Path.Combine(parent, "v2 migration"));
+    Directory.CreateDirectory(v2.ImagesPath);
+    File.WriteAllBytes(Path.Combine(v2.ImagesPath, "old.png"), [1, 2, 3]);
+    File.WriteAllBytes(Path.Combine(v2.ImagesPath, "old.thumb.png"), [4, 5]);
+    using (var db = new NativeSqlite(v2.DatabasePath))
+    {
+        db.Execute("CREATE TABLE entries(id TEXT PRIMARY KEY,kind INTEGER NOT NULL,text TEXT,hash TEXT NOT NULL,image_path TEXT,width INTEGER NOT NULL,height INTEGER NOT NULL,created_at INTEGER NOT NULL,copied_at INTEGER NOT NULL,favorite INTEGER NOT NULL,thumbnail_path TEXT)");
+        db.Execute("CREATE TABLE settings(key TEXT PRIMARY KEY,value TEXT NOT NULL)");
+        db.Execute("CREATE UNIQUE INDEX idx_content ON entries(kind,hash)");
+        db.Execute("INSERT INTO entries VALUES('text',0,'旧版收藏','text',NULL,0,0,1,2,1,NULL)");
+        db.Execute("INSERT INTO entries VALUES('image',1,NULL,'image','images/old.png',2,3,1,3,1,'images/old.thumb.png')");
+        db.Execute("INSERT INTO settings VALUES('theme','Dark')");
+        db.Execute("PRAGMA user_version=2");
+    }
+    await v2.InitializeAsync();
+    Check((await v2.LoadAsync()) is var oldRows && oldRows.Count == 2 && oldRows.All(r => r.IsFavorite && !r.IsPinned)
+        && oldRows.Single(r => r.Id == "text").Text == "旧版收藏" && File.Exists(Path.Combine(v2.ImagesPath, "old.png"))
+        && File.Exists(Path.Combine(v2.ImagesPath, "old.thumb.png")), "v2 to v3 preserves favorites, text and owned image files");
+    Check((await v2.LoadSettingsAsync()) is { Theme: ThemeMode.Dark, Backdrop: BackdropLevel.Strong, FavoriteSort: FavoriteSortMode.RecentCopy }, "old settings receive compatible backdrop and sort defaults");
+    var favoriteStore = new HistoryStore(Path.Combine(parent, "favorites"));
+    await favoriteStore.InitializeAsync();
+    var alpha = await favoriteStore.SaveAsync(Text("Alpha"), 500);
+    var beta = await favoriteStore.SaveAsync(Text("Beta"), 500);
+    var other = await favoriteStore.SaveAsync(Text("not favorite"), 500);
+    await favoriteStore.SetFavoriteAsync(alpha.Id, true); await favoriteStore.SetFavoriteAsync(beta.Id, true);
+    await favoriteStore.SetPinnedAsync(alpha.Id, true); await favoriteStore.SetPinnedAsync(other.Id, true);
+    var favorites = await favoriteStore.LoadAsync();
+    Check(FavoriteOrdering.Apply(favorites, FavoriteSortMode.RecentCopy).First().Id == alpha.Id
+        && favorites.First().Id == other.Id && !favorites.Single(r => r.Id == other.Id).IsPinned, "pinning affects favorites only and cannot pin non-favorites");
+    await favoriteStore.SaveAsync(Text("Alpha"), 500);
+    Check((await favoriteStore.LoadAsync()).Single(r => r.Id == alpha.Id).IsPinned, "duplicate copy preserves favorite pin");
+    await favoriteStore.SetPinnedAsync(alpha.Id, false);
+    favorites = await favoriteStore.LoadAsync();
+    Check(FavoriteOrdering.Apply(favorites, FavoriteSortMode.RecentCopy).First().Id == alpha.Id
+        && FavoriteOrdering.Apply(favorites, FavoriteSortMode.OldestCopy).First().Id == beta.Id
+        && FavoriteOrdering.Apply(favorites, FavoriteSortMode.Content).First().Id == alpha.Id, "favorite time and content ordering use actual content and copy times");
+    await favoriteStore.SetPinnedAsync(beta.Id, true);
+    await favoriteStore.SaveSettingsAsync(new AppSettings(Backdrop: BackdropLevel.Solid, FavoriteSort: FavoriteSortMode.Content));
+    var featureRestart = new HistoryStore(favoriteStore.RootPath); await featureRestart.InitializeAsync();
+    Check((await featureRestart.LoadAsync()).Single(r => r.Id == beta.Id).IsPinned
+        && (await featureRestart.LoadSettingsAsync()) is { Backdrop: BackdropLevel.Solid, FavoriteSort: FavoriteSortMode.Content }, "pin, backdrop and favorite sort survive restart");
+    await favoriteStore.SetFavoriteAsync(beta.Id, false);
+    await favoriteStore.SetFavoriteAsync(beta.Id, true);
+    Check(!(await favoriteStore.LoadAsync()).Single(r => r.Id == beta.Id).IsPinned, "removing a favorite clears its pin before re-favoriting");
+    using (var db = new NativeSqlite(favoriteStore.DatabasePath))
+    { db.Execute("UPDATE settings SET value='999' WHERE key IN ('backdrop','favorite_sort')"); }
+    Check((await favoriteStore.LoadSettingsAsync()) is { Backdrop: BackdropLevel.Strong, FavoriteSort: FavoriteSortMode.RecentCopy }, "invalid appearance and sort settings fall back safely");
     using (var db = new NativeSqlite(migration.DatabasePath)) db.Execute("PRAGMA user_version=99");
     var rejected = false;
     try { await new HistoryStore(migration.RootPath).InitializeAsync(); } catch (InvalidDataException) { rejected = true; }

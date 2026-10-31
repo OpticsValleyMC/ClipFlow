@@ -39,6 +39,13 @@ internal static class NativeWindowCapture
         }
         if (GetForegroundWindow() != window || !GetWindowRect(window, out var rect))
             throw new InvalidOperationException("测试窗口未持有前台焦点，停止桌面截图。");
+        await SaveOwnWindowAsync(window, path);
+    }
+    internal static async Task SaveOwnWindowAsync(IntPtr window, string path)
+    {
+        GetWindowThreadProcessId(window, out var process);
+        if (process != Environment.ProcessId || !GetWindowRect(window, out var rect))
+            throw new InvalidOperationException("只能截取当前隔离测试进程的窗口。");
         var width = rect.Right - rect.Left; var height = rect.Bottom - rect.Top;
         if (width <= 0 || height <= 0 || (long)width * height > 16_000_000) throw new InvalidDataException("测试窗口截图尺寸无效。");
         var screen = GetDC(IntPtr.Zero);
@@ -85,6 +92,7 @@ internal static class NativeWindowCapture
         public uint Compression, ImageSize; public int XResolution, YResolution; public uint UsedColors, ImportantColors;
     }
     [DllImport("user32")] private static extern IntPtr GetForegroundWindow();
+    [DllImport("user32")] private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint process);
     [DllImport("user32")] private static extern bool GetWindowRect(IntPtr window, out Rect rect);
     [DllImport("user32")] private static extern IntPtr GetDC(IntPtr window);
     [DllImport("user32")] private static extern int ReleaseDC(IntPtr window, IntPtr dc);
