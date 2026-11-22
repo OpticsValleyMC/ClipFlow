@@ -11,8 +11,6 @@ if (!$ManifestPath) {
 }
 
 [xml]$manifest = Get-Content -LiteralPath $ManifestPath -Encoding utf8
-$storeIdentity = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'StoreIdentity.json') -Raw -Encoding utf8 |
-    ConvertFrom-Json
 [xml]$version = Get-Content -LiteralPath (Join-Path $repoPath 'ClipFlow/Directory.Build.props')
 
 $ns = [Xml.XmlNamespaceManager]::new($manifest.NameTable)
@@ -29,14 +27,27 @@ function Assert-Release([bool]$value, [string]$message) {
 
 $identity = $manifest.Package.Identity
 
-Assert-Release (
-    $identity.Name -eq $storeIdentity.Name -and
-    $identity.Publisher -in 'CN=OpticsValley', $storeIdentity.Publisher
-) 'Identity is the configured local-development or Store identity'
-
 if ($identity.Publisher -eq 'CN=OpticsValley') {
+    $expectedName = 'OpticsValley.ClipFlow-'
+    $expectedPublisher = 'CN=OpticsValley'
+    $expectedDisplayName = 'ClipFlow'
+    $expectedPublisherDisplayName = 'OpticsValley'
     Write-Output 'NOTE: Local-development publisher; Build-Store.ps1 generates a separate Partner Center manifest.'
+} else {
+    $storeIdentityPath = Join-Path $PSScriptRoot 'StoreIdentity.json'
+    if (!(Test-Path -LiteralPath $storeIdentityPath -PathType Leaf)) {
+        throw 'StoreIdentity.json is required to validate a Partner Center manifest.'
+    }
+    $storeIdentity = Get-Content -LiteralPath $storeIdentityPath -Raw -Encoding utf8 | ConvertFrom-Json
+    $expectedName = $storeIdentity.Name
+    $expectedPublisher = $storeIdentity.Publisher
+    $expectedDisplayName = $storeIdentity.DisplayName
+    $expectedPublisherDisplayName = $storeIdentity.PublisherDisplayName
 }
+
+Assert-Release (
+    $identity.Name -eq $expectedName -and $identity.Publisher -eq $expectedPublisher
+) 'Identity is the configured local-development or Store identity'
 
 Assert-Release (
     $identity.Version -match '^\d+\.\d+\.\d+\.\d+$' -and
@@ -44,18 +55,12 @@ Assert-Release (
     $version.Project.PropertyGroup.AssemblyVersion -eq $identity.Version
 ) "Manifest and binary version agree: $($identity.Version)"
 
-$expectedDisplayName = if ($identity.Publisher -eq $storeIdentity.Publisher) {
-    $storeIdentity.DisplayName
-} else {
-    'ClipFlow'
-}
-
 $visual = $manifest.SelectSingleNode('//uap:VisualElements', $ns)
 
 Assert-Release (
     $manifest.Package.Properties.DisplayName -ceq $expectedDisplayName -and
     $visual.DisplayName -ceq $expectedDisplayName -and
-    $manifest.Package.Properties.PublisherDisplayName -ceq $storeIdentity.PublisherDisplayName
+    $manifest.Package.Properties.PublisherDisplayName -ceq $expectedPublisherDisplayName
 ) "Package and application display names match configuration: $expectedDisplayName"
 
 $family = $manifest.Package.Dependencies.TargetDeviceFamily
