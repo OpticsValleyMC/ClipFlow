@@ -18,6 +18,7 @@ CapturedContent Text(string value) => new(ContentKind.Text, value, ContentIdenti
 try
 {
     var store = new HistoryStore(Path.Combine(parent, "fresh 数据目录"));
+    Check(await store.ReadLanguageAsync() == AppLanguage.System && !File.Exists(store.DatabasePath), "language lookup defaults to system without creating a database");
     await store.InitializeAsync();
     var first = await store.SaveAsync(Text("你好 ClipFlow\nsecond line ' SQL"), 500);
     await store.SetFavoriteAsync(first.Id, true);
@@ -46,6 +47,24 @@ try
     await restarted.InitializeAsync();
     Check((await restarted.LoadAsync()).Any(r => r.Id == first.Id && r.IsFavorite), "restart persistence");
     Check(await restarted.LoadSettingsAsync() == new AppSettings(ThemeMode.Dark, false, 20), "settings persistence");
+    await store.SaveLanguageAsync(AppLanguage.TraditionalChinese);
+    var languageReader = new HistoryStore(store.RootPath);
+    Check(await languageReader.ReadLanguageAsync() == AppLanguage.TraditionalChinese
+        && await restarted.LoadSettingsAsync() == new AppSettings(ThemeMode.Dark, false, 20, Language: AppLanguage.TraditionalChinese),
+        "language preference is available before app initialization and preserves other settings");
+    using (var db = new NativeSqlite(store.DatabasePath)) db.Execute("UPDATE settings SET value='invalid' WHERE key='language'");
+    Check(await languageReader.ReadLanguageAsync() == AppLanguage.System && (await store.LoadSettingsAsync()).Language == AppLanguage.System,
+        "invalid language preferences fall back to system");
+    await store.SaveLanguageAsync(AppLanguage.English);
+
+    Check(LocalizedStrings.ResolveCulture(AppLanguage.System, ["fr-FR", "zh-Hant-HK"]).Name == "zh-TW"
+        && LocalizedStrings.ResolveCulture(AppLanguage.System, ["zh-SG"]).Name == "zh-CN"
+        && LocalizedStrings.ResolveCulture(AppLanguage.System, ["ja-JP"]).Name == "en-US", "system language maps supported Windows preferences and falls back to English");
+    foreach (var (language, expected) in new[] { (AppLanguage.English, "Settings"), (AppLanguage.TraditionalChinese, "設定"), (AppLanguage.SimplifiedChinese, "设置") })
+    {
+        LocalizedStrings.UseCulture(LocalizedStrings.ResolveCulture(language, ["de-DE"]));
+        Check(LocalizedStrings.L("Settings") == expected, $"{language} uses its own translation resources");
+    }
     var pixels = new byte[] { 1, 2, 3, 255 };
     var hash = ContentIdentity.ImageHash(pixels, 1, 1);
     Check(hash != ContentIdentity.ImageHash(pixels, 1, 2), "image identity includes dimensions");
@@ -62,9 +81,9 @@ try
     for (var i = 0; i < 25; i++) await store.SaveAsync(Text("prune " + i), 10);
     Check((await store.LoadAsync()).Count == 10, "retention cap");
     await store.ClearAsync(false);
-    Check((await store.LoadAsync()).Count == 0 && (await store.LoadSettingsAsync()).Theme == ThemeMode.Dark, "clear history preserves settings");
+    Check((await store.LoadAsync()).Count == 0 && (await store.LoadSettingsAsync()) is { Theme: ThemeMode.Dark, Language: AppLanguage.English }, "clear history preserves settings");
     await store.ClearAsync(true);
-    Check(await store.LoadSettingsAsync() == new AppSettings(), "clear all resets settings");
+    Check(await store.LoadSettingsAsync() == new AppSettings() && await languageReader.ReadLanguageAsync() == AppLanguage.System, "clear all resets settings including language");
     var migration = new HistoryStore(Path.Combine(parent, "migration"));
     Directory.CreateDirectory(migration.RootPath);
     using (var db = new NativeSqlite(migration.DatabasePath))

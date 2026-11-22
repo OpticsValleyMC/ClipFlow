@@ -6,12 +6,12 @@
         <TextBox x:Name="FullText" Grid.Row="1" IsReadOnly="True" AcceptsReturn="True" MaxLength="0" TextWrapping="Wrap"
             ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollMode="Disabled"
-            AutomationProperties.Name="完整文本，当前页"/>
+            AutomationProperties.Name="{Binding Value, Source={StaticResource L_CurrentTextPage}}"/>
         <Grid x:Name="Paging" Grid.Row="2" ColumnSpacing="12">
             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <Button x:Name="Previous" Content="上一页" Click="Previous_Click"/>
+            <Button x:Name="Previous" Content="{Binding Value, Source={StaticResource L_PreviousPage}}" Click="Previous_Click"/>
             <TextBlock x:Name="PageLabel" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" AutomationProperties.LiveSetting="Polite"/>
-            <Button x:Name="Next" Grid.Column="2" Content="下一页" Click="Next_Click"/>
+            <Button x:Name="Next" Grid.Column="2" Content="{Binding Value, Source={StaticResource L_NextPage}}" Click="Next_Click"/>
         </Grid>
     </Grid>
 </UserControl>

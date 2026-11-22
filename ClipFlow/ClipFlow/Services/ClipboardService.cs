@@ -1,3 +1,4 @@
+using static ClipFlow.Core.LocalizedStrings;
 using ClipFlow.Core;
 using Microsoft.UI.Dispatching;
 using System.Runtime.InteropServices;
@@ -88,11 +89,11 @@ public sealed class ClipboardService : IDisposable
                 Trace($"saved seq={sequence}");
             }
         }
-        catch (OperationCanceledException) { Trace("read-timeout"); if (!_disposed && CanRecord) Notice?.Invoke("此次剪贴板读取超时，后续复制仍会正常记录。"); }
+        catch (OperationCanceledException) { Trace("read-timeout"); if (!_disposed && CanRecord) Notice?.Invoke(L("ClipboardTimeout")); }
         catch (Exception ex)
         {
             Trace($"read-error HRESULT={ex.HResult:X8} {ex.GetType().Name}");
-            if (!_disposed) Notice?.Invoke(ex is InvalidDataException ? ex.Message : "暂时无法读取剪贴板，已跳过此次内容。后续复制仍会正常记录。");
+            if (!_disposed) Notice?.Invoke(ex is InvalidDataException ? ex.Message : L("ClipboardReadFailed"));
         }
         finally
         {
@@ -148,7 +149,7 @@ public sealed class ClipboardService : IDisposable
         {
             var text = await view.GetTextAsync().AsTask(token);
             if (string.IsNullOrEmpty(text)) return null;
-            if (text.Length > 2_000_000) throw new InvalidDataException("文本超过 200 万字符，已跳过。");
+            if (text.Length > 2_000_000) throw new InvalidDataException(L("TextTooLong"));
             var hash = await Task.Run(() => ContentIdentity.TextHash(text), token);
             return new CapturedContent(ContentKind.Text, text, hash);
         }
@@ -174,7 +175,7 @@ public sealed class ClipboardService : IDisposable
             return Task.FromResult(true);
         }, IsTransient, _lifetime.Token);
         _lastSequence = ClipboardPrivacy.GetClipboardSequenceNumber();
-        try { Clipboard.Flush(); } catch (COMException) { Notice?.Invoke("已复制；系统暂时无法保存退出后的剪贴板副本。"); }
+        try { Clipboard.Flush(); } catch (COMException) { Notice?.Invoke(L("ClipboardFlushFailed")); }
     }
     public void Dispose()
     {

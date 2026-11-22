@@ -11,7 +11,6 @@ public sealed partial class SettingsView : UserControl
     public SettingsView()
     {
         InitializeComponent();
-        AboutVersion.Text = AppInfo.AboutVersion; AboutAuthor.Text = AppInfo.AboutAuthor;
         foreach (var key in Enumerable.Range(0x41, 26).Concat(Enumerable.Range(0x30, 10)).Concat(Enumerable.Range(0x70, 11)))
             ShortcutKey.Items.Add(new ComboBoxItem { Content = key >= 0x70 ? $"F{key - 0x6F}" : ((char)key).ToString(), Tag = (uint)key });
         Loaded += (_, _) => SubscribeShortcut();
@@ -35,17 +34,31 @@ public sealed partial class SettingsView : UserControl
     private async void Shortcut_Save(object sender, RoutedEventArgs args)
     {
         if (DataContext is not MainViewModel vm || !vm.IsReady || ShortcutModifiers.SelectedItem is not ComboBoxItem modifiers || ShortcutKey.SelectedItem is not ComboBoxItem key) return;
-        try { await vm.ChangeShortcutAsync(uint.Parse((string)modifiers.Tag), (uint)key.Tag); vm.SetShortcutStatus("快捷键已更新"); }
-        catch (Exception ex) { vm.SetShortcutStatus(ex.Message); }
+        try { await vm.ChangeShortcutAsync(uint.Parse((string)modifiers.Tag), (uint)key.Tag); vm.SetShortcutStatus("ShortcutUpdated"); }
+        catch (Exception ex) { vm.SetShortcutError(ex); }
         RefreshShortcut();
     }
     private async void Shortcut_Reset(object sender, RoutedEventArgs args)
     {
         if (DataContext is not MainViewModel vm || !vm.IsReady) return;
-        try { await vm.ChangeShortcutAsync(1, 0x56); vm.SetShortcutStatus("已恢复 Alt + V"); }
-        catch (Exception ex) { vm.SetShortcutStatus(ex.Message); }
+        try { await vm.ChangeShortcutAsync(1, 0x56); vm.SetShortcutStatus("ShortcutReset"); }
+        catch (Exception ex) { vm.SetShortcutError(ex); }
         RefreshShortcut();
     }
+    private async void Language_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm || !vm.IsReady || sender is not ComboBox box
+            || box.SelectedIndex < 0 || box.SelectedIndex == vm.LanguageIndex) return;
+
+        var index = box.SelectedIndex;
+        try { await vm.ChangeLanguageAsync((AppLanguage)index); }
+        catch (Exception ex)
+        {
+            vm.ReportError(ex);
+            if (box.SelectedIndex == index) box.SelectedIndex = vm.LanguageIndex;
+        }
+    }
+
     private async void Theme_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (DataContext is not MainViewModel vm || !vm.IsReady || sender is not ComboBox box || box.SelectedIndex < 0 || box.SelectedIndex == vm.ThemeIndex) return;

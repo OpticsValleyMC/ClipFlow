@@ -9,17 +9,17 @@
                 <FontIcon Glyph="{Binding TypeGlyph}" FontSize="16" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                 <TextBlock Grid.Column="1" Text="{Binding KindLabel}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                    <FontIcon Glyph="&#xE718;" FontSize="12" Visibility="{Binding PinnedVisibility}" AutomationProperties.Name="已置顶"/>
-                    <FontIcon Glyph="&#xE735;" FontSize="12" Visibility="{Binding FavoriteVisibility}" Foreground="{ThemeResource SystemControlHighlightAccentBrush}" AutomationProperties.Name="已收藏"/>
+                    <FontIcon Glyph="&#xE718;" FontSize="12" Visibility="{Binding PinnedVisibility}" AutomationProperties.Name="{Binding Value, Source={StaticResource L_Pinned}}"/>
+                    <FontIcon Glyph="&#xE735;" FontSize="12" Visibility="{Binding FavoriteVisibility}" Foreground="{ThemeResource SystemControlHighlightAccentBrush}" AutomationProperties.Name="{Binding Value, Source={StaticResource L_Favorited}}"/>
                 </StackPanel>
             </Grid>
-            <Button Grid.Row="1" Command="{Binding DetailCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="8" Background="Transparent" BorderThickness="0" AutomationProperties.Name="查看完整内容">
+            <Button Grid.Row="1" Command="{Binding DetailCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="8" Background="Transparent" BorderThickness="0" AutomationProperties.Name="{Binding Value, Source={StaticResource L_ViewFullContent}}">
                 <StackPanel Spacing="10">
                     <TextBlock x:Name="PreviewText" Text="{Binding Preview}" local:SearchHighlight.Query="{Binding SearchQuery}" MaxLines="3" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Visibility="{Binding TextVisibility}" FontSize="14"/>
                     <StackPanel Visibility="{Binding ImageVisibility}" Spacing="8">
-                        <Image Source="{Binding Thumbnail}" Height="150" Stretch="Uniform" HorizontalAlignment="Left" Visibility="{Binding ImagePreviewVisibility}" AutomationProperties.Name="图片缩略图"/>
+                        <Image Source="{Binding Thumbnail}" Height="150" Stretch="Uniform" HorizontalAlignment="Left" Visibility="{Binding ImagePreviewVisibility}" AutomationProperties.Name="{Binding Value, Source={StaticResource L_ImageThumbnail}}"/>
                         <Border Visibility="{Binding ImageFailureVisibility}" Padding="20" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="4">
-                            <StackPanel Spacing="8"><FontIcon Glyph="&#xE8B9;" FontSize="24"/><TextBlock Text="图片无法加载，文件可能已丢失或损坏。" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/></StackPanel>
+                            <StackPanel Spacing="8"><FontIcon Glyph="&#xE8B9;" FontSize="24"/><TextBlock Text="{Binding Value, Source={StaticResource L_ImageUnavailable}}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/></StackPanel>
                         </Border>
                         <TextBlock Text="{Binding Dimensions}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     </StackPanel>
@@ -33,7 +33,7 @@
                     <Button Command="{Binding PinCommand}" Visibility="{Binding PinActionVisibility}" AutomationProperties.Name="{Binding PinLabel}" ToolTipService.ToolTip="{Binding PinLabel}"><FontIcon Glyph="{Binding PinGlyph}" FontSize="14"/></Button>
                     <Button x:Name="CopyButton" Command="{Binding CopyCommand}" AutomationProperties.Name="{Binding CopyLabel}" ToolTipService.ToolTip="{Binding CopyLabel}"><FontIcon Glyph="{Binding CopyGlyph}" FontSize="14"/></Button>
                     <Button Command="{Binding FavoriteCommand}" AutomationProperties.Name="{Binding FavoriteLabel}" ToolTipService.ToolTip="{Binding FavoriteLabel}"><FontIcon Glyph="{Binding FavoriteGlyph}" FontSize="14"/></Button>
-                    <Button Command="{Binding DeleteCommand}" AutomationProperties.Name="删除记录" ToolTipService.ToolTip="删除记录"><FontIcon Glyph="&#xE74D;" FontSize="14"/></Button>
+                    <Button Command="{Binding DeleteCommand}" AutomationProperties.Name="{Binding Value, Source={StaticResource L_DeleteItem}}" ToolTipService.ToolTip="{Binding Value, Source={StaticResource L_DeleteItem}}"><FontIcon Glyph="&#xE74D;" FontSize="14"/></Button>
                 </StackPanel>
             </Grid>
         </Grid>

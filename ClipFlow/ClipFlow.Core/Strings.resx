@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+    <resheader name="version"><value>2.0</value></resheader>
+    <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <data name="About" xml:space="preserve"><value>关于</value></data>
+    <data name="ActionFailed" xml:space="preserve"><value>操作失败，请重试</value></data>
+    <data name="ActualImageSize" xml:space="preserve"><value>按原始像素查看图片</value></data>
+    <data name="AllDataCleared" xml:space="preserve"><value>本地记录、图片和设置已清空</value></data>
+    <data name="AllRecords" xml:space="preserve"><value>全部记录</value></data>
+    <data name="AllTypes" xml:space="preserve"><value>全部类型</value></data>
+    <data name="Appearance" xml:space="preserve"><value>外观</value></data>
+    <data name="AppIcon" xml:space="preserve"><value>ClipFlow 图标</value></data>
+    <data name="AppTheme" xml:space="preserve"><value>应用主题</value></data>
+    <data name="AuthorFormat" xml:space="preserve"><value>作者 {0}</value></data>
+    <data name="AutoPasteFailed" xml:space="preserve"><value>已复制，无法自动粘贴，请切回输入框按 Ctrl+V</value></data>
+    <data name="Background" xml:space="preserve"><value>背景效果</value></data>
+    <data name="BackgroundHelp" xml:space="preserve"><value>调整云母效果的明显程度，不支持材质或系统关闭透明效果时，会自动使用纯色</value></data>
+    <data name="Cancel" xml:space="preserve"><value>取消</value></data>
+    <data name="Clear" xml:space="preserve"><value>清空</value></data>
+    <data name="ClearAllAction" xml:space="preserve"><value>清空全部本地数据</value></data>
+    <data name="ClearDataHelp" xml:space="preserve"><value>清空历史会删除所有记录、收藏和图片，清空全部数据还会重置设置，两项操作均需确认</value></data>
+    <data name="ClearHistory" xml:space="preserve"><value>清空历史</value></data>
+    <data name="ClearHistoryAction" xml:space="preserve"><value>清空历史记录</value></data>
+    <data name="Clipboard" xml:space="preserve"><value>剪贴板</value></data>
+    <data name="ClipboardFlushFailed" xml:space="preserve"><value>已复制；系统暂时无法保存退出后的剪贴板副本。</value></data>
+    <data name="ClipboardItems" xml:space="preserve"><value>剪贴板记录</value></data>
+    <data name="ClipboardReadFailed" xml:space="preserve"><value>暂时无法读取剪贴板，已跳过此次内容。后续复制仍会正常记录。</value></data>
+    <data name="ClipboardTimeout" xml:space="preserve"><value>此次剪贴板读取超时，后续复制仍会正常记录。</value></data>
+    <data name="Close" xml:space="preserve"><value>关闭</value></data>
+    <data name="CloseEsc" xml:space="preserve"><value>关闭 · Esc</value></data>
+    <data name="ClosePanel" xml:space="preserve"><value>关闭浮窗</value></data>
+    <data name="CloseToTray" xml:space="preserve"><value>关闭窗口并继续后台运行</value></data>
+    <data name="CloseWindow" xml:space="preserve"><value>关闭窗口</value></data>
+    <data name="ConfirmClearAll" xml:space="preserve"><value>所有记录、收藏和图片将被删除，设置将恢复默认。这项操作无法撤销。</value></data>
+    <data name="ConfirmClearAllTitle" xml:space="preserve"><value>清空全部本地数据？</value></data>
+    <data name="ConfirmClearHistory" xml:space="preserve"><value>所有记录、收藏和图片将被删除。这项操作无法撤销。</value></data>
+    <data name="ConfirmClearHistoryTitle" xml:space="preserve"><value>清空历史记录？</value></data>
+    <data name="ContentType" xml:space="preserve"><value>内容类型</value></data>
+    <data name="Copied" xml:space="preserve"><value>已复制</value></data>
+    <data name="Copy" xml:space="preserve"><value>复制</value></data>
+    <data name="CopyFailed" xml:space="preserve"><value>复制失败，请重试</value></data>
+    <data name="CopyItem" xml:space="preserve"><value>复制记录</value></data>
+    <data name="CopyToPopulate" xml:space="preserve"><value>复制文本或图片后，会显示在这里</value></data>
+    <data name="CountFormat" xml:space="preserve"><value>{0:N0} 条记录</value></data>
+    <data name="CurrentTextPage" xml:space="preserve"><value>完整文本，当前页</value></data>
+    <data name="Dark" xml:space="preserve"><value>深色</value></data>
+    <data name="DatabaseRecoveryHelp" xml:space="preserve"><value>数据库初始化失败时，建议先备份本地数据目录；也可确认清空全部数据，恢复为空的数据库</value></data>
+    <data name="DataManagement" xml:space="preserve"><value>数据管理</value></data>
+    <data name="DataOnDeviceHeading" xml:space="preserve"><value>你的内容，留在你的设备</value></data>
+    <data name="DataOnDeviceHelp" xml:space="preserve"><value>ClipFlow 不上传剪贴板内容，记录与图片仅保存在当前 Windows 用户的本地应用数据目录</value></data>
+    <data name="DbNewerVersion" xml:space="preserve"><value>数据库由较新版本创建，请升级 ClipFlow。原始数据已保留。</value></data>
+    <data name="DbNotReady" xml:space="preserve"><value>数据库尚未就绪，请重试初始化。</value></data>
+    <data name="Delete" xml:space="preserve"><value>删除</value></data>
+    <data name="Deleted" xml:space="preserve"><value>已删除</value></data>
+    <data name="DeleteItem" xml:space="preserve"><value>删除记录</value></data>
+    <data name="DimensionsFormat" xml:space="preserve"><value>{0} × {1} 像素</value></data>
+    <data name="Disabled" xml:space="preserve"><value>已关闭</value></data>
+    <data name="DisplayLanguage" xml:space="preserve"><value>显示语言</value></data>
+    <data name="DragPanel" xml:space="preserve"><value>拖动浮窗</value></data>
+    <data name="DragPanelShortcutFormat" xml:space="preserve"><value>{0} · 拖动浮窗</value></data>
+    <data name="Enabled" xml:space="preserve"><value>已启用</value></data>
+    <data name="EnableRecording" xml:space="preserve"><value>启用剪贴板记录</value></data>
+    <data name="Exit" xml:space="preserve"><value>退出</value></data>
+    <data name="Favorite" xml:space="preserve"><value>收藏</value></data>
+    <data name="Favorited" xml:space="preserve"><value>已收藏</value></data>
+    <data name="FavoriteHelp" xml:space="preserve"><value>点击记录上的星标，把常用内容收藏到这里。</value></data>
+    <data name="FavoriteRecords" xml:space="preserve"><value>收藏的记录</value></data>
+    <data name="Favorites" xml:space="preserve"><value>收藏夹</value></data>
+    <data name="FavoritesOnly" xml:space="preserve"><value>只看收藏</value></data>
+    <data name="FavoriteSort" xml:space="preserve"><value>收藏排序</value></data>
+    <data name="FavoritesSubtitle" xml:space="preserve"><value>留住灵感，让重要内容随手可得</value></data>
+    <data name="FirstCopyHelp" xml:space="preserve"><value>在其他应用中复制文本或图片，ClipFlow 会在运行期间为你保存。</value></data>
+    <data name="FirstFavorite" xml:space="preserve"><value>收藏你的第一条记录</value></data>
+    <data name="FitImage" xml:space="preserve"><value>适应窗口</value></data>
+    <data name="FollowSystem" xml:space="preserve"><value>跟随系统</value></data>
+    <data name="FullText" xml:space="preserve"><value>完整文本</value></data>
+    <data name="FullTextHintFormat" xml:space="preserve"><value>查看全文 · {0:N0} 字符</value></data>
+    <data name="HistoryCleared" xml:space="preserve"><value>历史记录和图片已清空</value></data>
+    <data name="HistoryLimit" xml:space="preserve"><value>历史记录上限</value></data>
+    <data name="HistoryLimitHelp" xml:space="preserve"><value>10–10,000 条，超出时删除最旧记录（含收藏）</value></data>
+    <data name="HistoryLimitInput" xml:space="preserve"><value>历史记录数量上限</value></data>
+    <data name="HistoryList" xml:space="preserve"><value>剪贴板历史记录</value></data>
+    <data name="HistoryLoadFailed" xml:space="preserve"><value>无法读取本地记录，请重试</value></data>
+    <data name="Image" xml:space="preserve"><value>图片</value></data>
+    <data name="ImageLoadFailed" xml:space="preserve"><value>图片无法加载</value></data>
+    <data name="ImagePanTip" xml:space="preserve"><value>滚轮缩放 · 按住左键拖动</value></data>
+    <data name="ImagePathOutsideStorage" xml:space="preserve"><value>图片路径超出本地图片目录。</value></data>
+    <data name="ImagePreviewFormat" xml:space="preserve"><value>图片预览 · {0}</value></data>
+    <data name="ImagePreviewHelp" xml:space="preserve"><value>原始图片预览，滚动鼠标滚轮缩放，按住鼠标左键拖动</value></data>
+    <data name="ImageReadLimit" xml:space="preserve"><value>图片超过读取上限。</value></data>
+    <data name="ImageRequiresLocalCopy" xml:space="preserve"><value>图片必须先读取为本地副本，不能仅保存来源路径。</value></data>
+    <data name="ImageThumbnail" xml:space="preserve"><value>图片缩略图</value></data>
+    <data name="ImageTooLarge" xml:space="preserve"><value>图片超过 64 MB，已跳过。</value></data>
+    <data name="ImageTooManyPixels" xml:space="preserve"><value>图片超过 1600 万像素，已跳过。</value></data>
+    <data name="ImageUnavailable" xml:space="preserve"><value>图片无法加载，文件可能已丢失或损坏。</value></data>
+    <data name="InvalidHash" xml:space="preserve"><value>无效内容哈希。</value></data>
+    <data name="InvalidImageDimensions" xml:space="preserve"><value>图片尺寸无效。</value></data>
+    <data name="ItemDeleted" xml:space="preserve"><value>记录已删除</value></data>
+    <data name="LaunchAtSignIn" xml:space="preserve"><value>开机自启动</value></data>
+    <data name="Light" xml:space="preserve"><value>浅色</value></data>
+    <data name="LoadingHistory" xml:space="preserve"><value>正在读取本地记录</value></data>
+    <data name="LocalOnly" xml:space="preserve"><value>仅在本机保存</value></data>
+    <data name="Maximize" xml:space="preserve"><value>最大化</value></data>
+    <data name="MaximizeWindow" xml:space="preserve"><value>最大化窗口</value></data>
+    <data name="Minimize" xml:space="preserve"><value>最小化</value></data>
+    <data name="MinimizeWindow" xml:space="preserve"><value>最小化窗口</value></data>
+    <data name="MoreActions" xml:space="preserve"><value>更多操作</value></data>
+    <data name="MoreItemActions" xml:space="preserve"><value>记录更多操作</value></data>
+    <data name="NewestFirst" xml:space="preserve"><value>最近复制优先</value></data>
+    <data name="NextPage" xml:space="preserve"><value>下一页</value></data>
+    <data name="NoClipboardItems" xml:space="preserve"><value>暂无剪贴板记录</value></data>
+    <data name="NoFavorites" xml:space="preserve"><value>暂无收藏记录</value></data>
+    <data name="NoMatches" xml:space="preserve"><value>没有找到匹配的内容</value></data>
+    <data name="OldestFirst" xml:space="preserve"><value>最早复制优先</value></data>
+    <data name="OpenClipFlow" xml:space="preserve"><value>打开 ClipFlow</value></data>
+    <data name="OperationFailedStorage" xml:space="preserve"><value>操作未完成，请重试。已有数据库会被保留；请检查本地目录的访问权限和可用空间。</value></data>
+    <data name="PanelShortcut" xml:space="preserve"><value>剪贴板浮窗快捷键</value></data>
+    <data name="PanelShortcutHelp" xml:space="preserve"><value>在任何应用中按下快捷键，快速查找并复制记录</value></data>
+    <data name="PasteItem" xml:space="preserve"><value>粘贴此记录</value></data>
+    <data name="PastePanelHint" xml:space="preserve"><value>点击粘贴 · Esc 关闭</value></data>
+    <data name="Paused" xml:space="preserve"><value>已暂停</value></data>
+    <data name="PauseRecording" xml:space="preserve"><value>暂停记录</value></data>
+    <data name="PinFavorite" xml:space="preserve"><value>置顶收藏</value></data>
+    <data name="Pinned" xml:space="preserve"><value>已置顶</value></data>
+    <data name="PreparingHistory" xml:space="preserve"><value>正在准备本地记录</value></data>
+    <data name="PreviousPage" xml:space="preserve"><value>上一页</value></data>
+    <data name="ReadingStartup" xml:space="preserve"><value>正在读取 Windows 启动设置…</value></data>
+    <data name="Recent" xml:space="preserve"><value>最近记录</value></data>
+    <data name="RecentSubtitle" xml:space="preserve"><value>复制过的内容，都在这里</value></data>
+    <data name="RecordClipboard" xml:space="preserve"><value>记录剪贴板</value></data>
+    <data name="RecordClipboardHelp" xml:space="preserve"><value>暂停后停止收集，已有记录仍可查看，关闭窗口后在系统托盘继续运行，可从托盘菜单退出</value></data>
+    <data name="RecordingActive" xml:space="preserve"><value>ClipFlow 正在记录</value></data>
+    <data name="RecordingPausedHelp" xml:space="preserve"><value>记录已暂停，复制的内容将不会被保存。点击「继续记录」恢复。</value></data>
+    <data name="RecordingStorageUnavailable" xml:space="preserve"><value>记录不可用，请检查本地存储。</value></data>
+    <data name="RecordingUnavailable" xml:space="preserve"><value>记录不可用</value></data>
+    <data name="RemoveFavorite" xml:space="preserve"><value>取消收藏</value></data>
+    <data name="Restore" xml:space="preserve"><value>还原</value></data>
+    <data name="RestoreDefaultShortcut" xml:space="preserve"><value>恢复默认(Alt+V)</value></data>
+    <data name="RestoreWindow" xml:space="preserve"><value>还原窗口</value></data>
+    <data name="ResumeRecording" xml:space="preserve"><value>继续记录</value></data>
+    <data name="RetryHelp" xml:space="preserve"><value>如果初始化失败，可点击重试。已有数据会被保留。</value></data>
+    <data name="RetryInitialization" xml:space="preserve"><value>重试初始化</value></data>
+    <data name="Save" xml:space="preserve"><value>保存</value></data>
+    <data name="SearchClipboard" xml:space="preserve"><value>搜索剪贴板</value></data>
+    <data name="SearchFavorites" xml:space="preserve"><value>搜索收藏内容</value></data>
+    <data name="SearchHelp" xml:space="preserve"><value>尝试其他关键词，或切换内容类型。</value></data>
+    <data name="SearchHistory" xml:space="preserve"><value>搜索历史记录</value></data>
+    <data name="SearchPanelItems" xml:space="preserve"><value>搜索浮窗记录</value></data>
+    <data name="Settings" xml:space="preserve"><value>设置</value></data>
+    <data name="ShortcutConflict" xml:space="preserve"><value>快捷键已被占用或不可用，请更换组合</value></data>
+    <data name="ShortcutKey" xml:space="preserve"><value>快捷键主键</value></data>
+    <data name="ShortcutModifiers" xml:space="preserve"><value>快捷键修饰键</value></data>
+    <data name="ShortcutReset" xml:space="preserve"><value>已恢复 Alt + V</value></data>
+    <data name="Shortcuts" xml:space="preserve"><value>快捷操作</value></data>
+    <data name="ShortcutUnavailable" xml:space="preserve"><value>此快捷键已被占用或不可用，请换一个组合</value></data>
+    <data name="ShortcutUpdated" xml:space="preserve"><value>快捷键已更新</value></data>
+    <data name="SolidBackground" xml:space="preserve"><value>纯色（关闭材质）</value></data>
+    <data name="SortByContent" xml:space="preserve"><value>按内容名称排序</value></data>
+    <data name="StandardMica" xml:space="preserve"><value>云母 · 标准</value></data>
+    <data name="StandardPasteShortcut" xml:space="preserve"><value>Ctrl + V 用于粘贴，请选择其他快捷键</value></data>
+    <data name="StartByCopying" xml:space="preserve"><value>从一次复制开始</value></data>
+    <data name="Startup" xml:space="preserve"><value>开机启动</value></data>
+    <data name="StartupDisabledByPolicy" xml:space="preserve"><value>开机启动已被系统策略禁用</value></data>
+    <data name="StartupDisabledByUser" xml:space="preserve"><value>已在 Windows 中禁用，请到任务管理器的“启动应用”中重新启用 ClipFlow</value></data>
+    <data name="StartupDisabledHelp" xml:space="preserve"><value>登录 Windows 后在托盘启动，不打扰当前工作</value></data>
+    <data name="StartupEnabledByPolicy" xml:space="preserve"><value>开机启动由系统策略启用，无法在应用中更改</value></data>
+    <data name="StartupEnabledHelp" xml:space="preserve"><value>登录 Windows 后在托盘启动，可在任务管理器的“启动应用”中管理</value></data>
+    <data name="StartupReadFailed" xml:space="preserve"><value>暂时无法读取开机启动状态，请在 Windows 设置的“应用 → 启动”中检查</value></data>
+    <data name="StartupUnavailable" xml:space="preserve"><value>当前 Windows 环境不支持更改开机启动</value></data>
+    <data name="StrongMica" xml:space="preserve"><value>云母 · 明显</value></data>
+    <data name="SubtleMica" xml:space="preserve"><value>云母 · 轻柔</value></data>
+    <data name="Text" xml:space="preserve"><value>文本</value></data>
+    <data name="TextLengthFormat" xml:space="preserve"><value>共 {0:N0} 字符</value></data>
+    <data name="TextPagedHelp" xml:space="preserve"><value> · 分页浏览，复制按钮会复制全部原文</value></data>
+    <data name="TextPageFormat" xml:space="preserve"><value>第 {0} / {1} 页</value></data>
+    <data name="TextScrollHelp" xml:space="preserve"><value> · 可滚动查看与选择文本</value></data>
+    <data name="TextTooLong" xml:space="preserve"><value>文本超过 200 万字符，已跳过。</value></data>
+    <data name="ThemeHelp" xml:space="preserve"><value>选择熟悉的明暗外观</value></data>
+    <data name="TimestampFormat" xml:space="preserve"><value>MM 月 dd 日 · HH:mm:ss</value></data>
+    <data name="TrayUnavailable" xml:space="preserve"><value>系统托盘暂不可用，关闭窗口将退出应用。</value></data>
+    <data name="Unfavorited" xml:space="preserve"><value>已取消收藏</value></data>
+    <data name="Unpin" xml:space="preserve"><value>取消置顶</value></data>
+    <data name="VersionFormat" xml:space="preserve"><value>版本 {0}</value></data>
+    <data name="ViewFullContent" xml:space="preserve"><value>查看完整内容</value></data>
+    <data name="ViewImage" xml:space="preserve"><value>查看图片</value></data>
+    <data name="ViewOriginalImage" xml:space="preserve"><value>查看高清原图</value></data>
+    <data name="ZoomIn" xml:space="preserve"><value>放大</value></data>
+    <data name="ZoomInImage" xml:space="preserve"><value>放大图片</value></data>
+    <data name="ZoomOut" xml:space="preserve"><value>缩小</value></data>
+    <data name="ZoomOutImage" xml:space="preserve"><value>缩小图片</value></data>
+</root>

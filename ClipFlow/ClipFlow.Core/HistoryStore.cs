@@ -1,3 +1,4 @@
+using static ClipFlow.Core.LocalizedStrings;
 namespace ClipFlow.Core;
 
 public sealed class HistoryStore
@@ -17,7 +18,7 @@ public sealed class HistoryStore
         {
             return await Task.Run(() =>
             {
-                if (!initializing && !_ready) throw new InvalidOperationException("数据库尚未就绪，请重试初始化。");
+                if (!initializing && !_ready) throw new InvalidOperationException(L("DbNotReady"));
                 Directory.CreateDirectory(RootPath);
                 using var db = new NativeSqlite(DatabasePath);
                 return work(db);
@@ -30,7 +31,7 @@ public sealed class HistoryStore
         db.Execute("PRAGMA journal_mode=WAL");
         db.Execute("PRAGMA synchronous=FULL");
         var version = db.Scalar("PRAGMA user_version");
-        if (version > SchemaVersion) throw new InvalidDataException("数据库由较新版本创建，请升级 ClipFlow。原始数据已保留。");
+        if (version > SchemaVersion) throw new InvalidDataException(L("DbNewerVersion"));
         // Each migration and its version update commit together. Never delete/recreate a failed database.
         db.Transaction(() =>
         {
@@ -75,8 +76,8 @@ public sealed class HistoryStore
         if (content.Kind == ContentKind.Image)
         {
             if (content.ImagePng is not { Length: > 0 })
-                throw new InvalidDataException("图片必须先读取为本地副本，不能仅保存来源路径。");
-            if (content.Hash.Length != 64 || !content.Hash.All(Uri.IsHexDigit)) throw new InvalidDataException("无效内容哈希。");
+                throw new InvalidDataException(L("ImageRequiresLocalCopy"));
+            if (content.Hash.Length != 64 || !content.Hash.All(Uri.IsHexDigit)) throw new InvalidDataException(L("InvalidHash"));
             var original = Path.Combine("images", content.Hash + ".png");
             var thumbnail = Path.Combine("images", content.Hash + ".thumb.png");
             WriteAtomic(ResolveFile(original), content.ImagePng);
@@ -106,6 +107,26 @@ public sealed class HistoryStore
     public Task<bool> SetPinnedAsync(string id, bool pinned) => RunAsync(db => { db.Execute("UPDATE entries SET pinned=? WHERE id=? AND favorite=1", pinned, id); return true; });
     public Task<bool> TouchAsync(string id) => RunAsync(db => { db.Execute("UPDATE entries SET copied_at=MAX(?,(SELECT COALESCE(MAX(copied_at),0)+1 FROM entries)) WHERE id=?", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), id); return true; });
     public Task<bool> DeleteAsync(string id) => RunAsync(db => { db.Execute("DELETE FROM entries WHERE id=?", id); SweepFiles(db); return true; });
+    public Task<AppLanguage> ReadLanguageAsync() => Task.Run(() =>
+    {
+        if (!File.Exists(DatabasePath)) return AppLanguage.System;
+        try
+        {
+            using var db = new NativeSqlite(DatabasePath, readOnly: true);
+            return ParseLanguage(db.Query("SELECT value FROM settings WHERE key='language'").FirstOrDefault()?[0] as string);
+        }
+        catch (IOException) { return AppLanguage.System; } // Normal initialization reports storage errors.
+    });
+
+    private static AppLanguage ParseLanguage(string? value) =>
+        Enum.TryParse<AppLanguage>(value, out var language) && Enum.IsDefined(language) ? language : AppLanguage.System;
+
+    public Task SaveLanguageAsync(AppLanguage language) => RunAsync(db =>
+    {
+        db.Execute("INSERT INTO settings(key,value) VALUES('language',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", language.ToString());
+        return true;
+    });
+
     public Task<AppSettings> LoadSettingsAsync() => RunAsync(db =>
     {
         var values = db.Query("SELECT key,value FROM settings").ToDictionary(r => (string)r[0]!, r => (string)r[1]!);
@@ -116,7 +137,8 @@ public sealed class HistoryStore
         var sort = values.TryGetValue("favorite_sort", out var f) && Enum.TryParse<FavoriteSortMode>(f, out var order) && Enum.IsDefined(order) ? order : FavoriteSortMode.RecentCopy;
         var modifiers = values.TryGetValue("hotkey_modifiers", out var hm) && uint.TryParse(hm, out var m) && m is > 0 and <= 7 ? m : 1u;
         var key = values.TryGetValue("hotkey_key", out var hk) && uint.TryParse(hk, out var k) && (k is >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A or >= 0x70 and <= 0x7A) ? k : 0x56u;
-        return new AppSettings(theme, enabled, limit, backdrop, sort, modifiers, key);
+        var language = ParseLanguage(values.GetValueOrDefault("language"));
+        return new AppSettings(theme, enabled, limit, backdrop, sort, modifiers, key, language);
     });
     public Task<bool> SaveSettingsAsync(AppSettings settings) => RunAsync(db =>
     {
@@ -124,7 +146,7 @@ public sealed class HistoryStore
         {
             db.Execute("INSERT INTO settings(key,value) VALUES('hotkey_modifiers',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", settings.HotkeyModifiers.ToString());
             db.Execute("INSERT INTO settings(key,value) VALUES('hotkey_key',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", settings.HotkeyKey.ToString());
-            foreach (var pair in new[] { ("theme", settings.Theme.ToString()), ("recording", settings.RecordingEnabled.ToString()), ("limit", Math.Clamp(settings.HistoryLimit, 10, 10000).ToString()), ("backdrop", settings.Backdrop.ToString()), ("favorite_sort", settings.FavoriteSort.ToString()) })
+            foreach (var pair in new[] { ("theme", settings.Theme.ToString()), ("recording", settings.RecordingEnabled.ToString()), ("limit", Math.Clamp(settings.HistoryLimit, 10, 10000).ToString()), ("backdrop", settings.Backdrop.ToString()), ("favorite_sort", settings.FavoriteSort.ToString()), ("language", settings.Language.ToString()) })
                 db.Execute("INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", pair.Item1, pair.Item2);
             Prune(db, settings.HistoryLimit);
         });
@@ -167,7 +189,7 @@ public sealed class HistoryStore
     {
         var full = Path.GetFullPath(Path.Combine(RootPath, relative));
         if (!full.StartsWith(ImagesPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("图片路径超出本地图片目录。");
+            throw new InvalidDataException(L("ImagePathOutsideStorage"));
         return full;
     }
     private void SweepFiles(NativeSqlite db)

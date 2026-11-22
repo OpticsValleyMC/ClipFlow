@@ -6,9 +6,12 @@ namespace ClipFlow.Views;
 public sealed partial class HistoryView : UserControl
 {
     private MainViewModel? _owner;
+    private readonly ListWheelScroll _wheelScroll;
+
     public HistoryView()
     {
         InitializeComponent();
+        _wheelScroll = new ListWheelScroll(HistoryList, distancePerNotch: 48);
         DataContextChanged += (_, _) =>
         {
             if (_owner is not null)
@@ -41,11 +44,15 @@ public sealed partial class HistoryView : UserControl
     }
     private void RecordsChanged(object? sender, NotifyCollectionChangedEventArgs args)
     {
+        _wheelScroll.Reset();
         if (args.NewStartingIndex != 0) return;
         DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
         {
             if (_owner is not null && _owner.Records.Count > 0)
+            {
+                _wheelScroll.Reset();
                 HistoryList.ScrollIntoView(_owner.Records[0], ScrollIntoViewAlignment.Leading);
+            }
         });
     }
 }

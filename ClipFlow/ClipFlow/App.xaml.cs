@@ -1,5 +1,7 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using ClipFlow.Core;
+using ClipFlow.Services;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
@@ -89,26 +91,35 @@ namespace ClipFlow
                 var testRoot = Environment.GetEnvironmentVariable("CLIPFLOW_TEST_DATA_ROOT");
                 if (testRoot is not null) key += "." + ClipFlow.Core.ContentIdentity.TextHash(testRoot);
 #endif
+                var current = Microsoft.Windows.AppLifecycle.AppInstance.GetCurrent().GetActivatedEventArgs();
+                var startupActivation = current.Kind == Microsoft.Windows.AppLifecycle.ExtendedActivationKind.StartupTask
+                    || Environment.GetCommandLineArgs().Skip(1).Contains(StartupService.BackgroundArgument, StringComparer.Ordinal);
                 _instance = Microsoft.Windows.AppLifecycle.AppInstance.FindOrRegisterForKey(key);
                 if (!_instance.IsCurrent)
                 {
-                    await _instance.RedirectActivationToAsync(Microsoft.Windows.AppLifecycle.AppInstance.GetCurrent().GetActivatedEventArgs());
+                    if (!startupActivation) await _instance.RedirectActivationToAsync(current);
                     Exit();
                     return;
                 }
+                var dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+                var restoreRequested = false;
                 _instance.Activated += (_, activation) =>
                 {
                     if (activation.Kind != Microsoft.Windows.AppLifecycle.ExtendedActivationKind.StartupTask)
-                        _window?.DispatcherQueue.TryEnqueue(() => (_window as MainWindow)?.RestoreWindow());
+                        dispatcher.TryEnqueue(() =>
+                        {
+                            if (_window is MainWindow window) window.RestoreWindow();
+                            else restoreRequested = true;
+                        });
                 };
+                await InitializeLanguageAsync();
                 _window = new MainWindow();
-                var startupActivation = Microsoft.Windows.AppLifecycle.AppInstance.GetCurrent().GetActivatedEventArgs().Kind == Microsoft.Windows.AppLifecycle.ExtendedActivationKind.StartupTask;
 #if DEBUG
                 var backgroundTest = Environment.GetEnvironmentVariable("CLIPFLOW_SELF_TEST") == "background-check"
                     && Environment.GetEnvironmentVariable("CLIPFLOW_TEST_DATA_ROOT") is not null;
                 startupActivation |= backgroundTest;
 #endif
-                if (startupActivation)
+                if (startupActivation && !restoreRequested)
                 {
                     await ((MainWindow)_window).StartInBackgroundAsync();
 #if DEBUG
@@ -121,9 +132,20 @@ namespace ClipFlow
             {
                 if (_instance is { IsCurrent: false }) { Exit(); return; }
                 // Registration failure must not prevent access to the local history.
-                if (_window is null) { _window = new MainWindow(); _window.Activate(); }
+                if (_window is null)
+                {
+                    UiLanguage.Apply(AppLanguage.System);
+                    _window = new MainWindow();
+                    _window.Activate();
+                }
             }
         }
+        private async Task InitializeLanguageAsync()
+        {
+            var language = await new HistoryStore(LocalDataPath.GetRoot()).ReadLanguageAsync();
+            UiLanguage.Apply(language);
+        }
+
 #if DEBUG
         private sealed record AcceptanceLaunch(string Mode, string Root);
 #endif

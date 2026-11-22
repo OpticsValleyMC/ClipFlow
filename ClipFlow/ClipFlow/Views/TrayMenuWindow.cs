@@ -1,3 +1,4 @@
+using static ClipFlow.Core.LocalizedStrings;
 using System.Runtime.InteropServices;
 using ClipFlow.Core;
 using ClipFlow.Services;
@@ -5,6 +6,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Markup;
 using Windows.Graphics;
 
@@ -18,7 +20,7 @@ internal sealed class TrayMenuWindow : Window
     private readonly MenuFlyout _menu = new() { ShouldConstrainToRootBounds = false };
     private readonly Dictionary<uint, MenuFlyoutItemBase> _commands = [];
     private readonly Action<uint> _invoke;
-    private bool _disposed, _open, _popupOpen, _standardMenu, _loaded, _shutdown;
+    private bool _disposed, _open, _popupOpen, _standardMenu, _shutdown;
     internal IntPtr NativeHandle { get; }
     internal bool IsMenuOpen => !_disposed && _open && _popupOpen;
     internal event Action? Dismissed;
@@ -56,49 +58,61 @@ internal sealed class TrayMenuWindow : Window
     {
         _root.RequestedTheme = theme switch { ThemeMode.Light => ElementTheme.Light, ThemeMode.Dark => ElementTheme.Dark, _ => ElementTheme.Default };
         _menu.Items.Clear(); _commands.Clear();
-        _menu.Items.Add(new MenuFlyoutItem { Text = AppInfo.VersionLabel, IsEnabled = false });
+        _menu.Items.Add(Align(new MenuFlyoutItem { Text = AppInfo.VersionLabel, IsEnabled = false }));
         _menu.Items.Add(new MenuFlyoutSeparator());
-        Add(TrayService.OpenCommand, "打开 ClipFlow", "\uE8A7");
-        Add(TrayService.ToggleRecordingCommand, !recording.Ready ? "记录不可用" : recording.Recording ? "暂停记录" : "继续记录",
+        Add(TrayService.OpenCommand, "OpenClipFlow", "\uE8A7");
+        Add(TrayService.ToggleRecordingCommand, !recording.Ready ? "RecordingUnavailable" : recording.Recording ? "PauseRecording" : "ResumeRecording",
             recording.Recording ? "\uE769" : "\uE768", recording.Ready);
         _menu.Items.Add(new MenuFlyoutSeparator());
-        var startupItem = new AlignedToggleMenuFlyoutItem { Text = "开机自启动", IsChecked = startup.Enabled, IsEnabled = startup.CanChange };
-        ToolTipService.SetToolTip(startupItem, startup.Description);
+        var startupItem = new AlignedToggleMenuFlyoutItem { IsChecked = startup.Enabled, IsEnabled = startup.CanChange, HorizontalContentAlignment = HorizontalAlignment.Left };
+        UiLanguage.Bind(startupItem, ToggleMenuFlyoutItem.TextProperty, "LaunchAtSignIn");
+        UiLanguage.Bind(startupItem, ToolTipService.ToolTipProperty, startup.DescriptionKey);
         startupItem.Click += (_, _) => Select(TrayService.ToggleStartupCommand);
         _menu.Items.Add(startupItem); _commands[TrayService.ToggleStartupCommand] = startupItem;
         _menu.Items.Add(new MenuFlyoutSeparator());
-        Add(TrayService.ExitCommand, "退出", "\uE7E8");
+        Add(TrayService.ExitCommand, "Exit", "\uE7E8");
 
         var work = DisplayArea.GetFromPoint(new PointInt32(x, y), DisplayAreaFallback.Nearest).WorkArea;
         AppWindow.MoveAndResize(new RectInt32(Math.Clamp(x, work.X, work.X + work.Width - 1),
             Math.Clamp(y, work.Y, work.Y + work.Height - 1), 1, 1));
         // Wait for a loaded XamlRoot before opening the framework's separate popup.
         var loaded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        void OnLoaded(object sender, RoutedEventArgs args) { _loaded = true; loaded.TrySetResult(); }
+        void OnLoaded(object sender, RoutedEventArgs args) => loaded.TrySetResult();
         _root.Loaded += OnLoaded;
         try
         {
             _open = true;
             AppWindow.Show();
             Activate(); SetForegroundWindow(NativeHandle);
-            if (!_loaded) await loaded.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            if (!_root.IsLoaded) await loaded.Task.WaitAsync(TimeSpan.FromSeconds(2));
             var activated = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             if (!DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => activated.TrySetResult()))
                 throw new InvalidOperationException("无法调度托盘菜单");
             await activated.Task;
             if (_disposed || !_open) return;
+            UiLanguage.BindLanguage(_root);
             Trace("ShowAt");
-            _menu.ShowAt(_root, new Windows.Foundation.Point(0, 0));
+            _menu.ShowAt(_root, new FlyoutShowOptions { Placement = FlyoutPlacementMode.TopEdgeAlignedLeft });
         }
         finally { _root.Loaded -= OnLoaded; }
     }
 
-    private void Add(uint command, string text, string glyph, bool enabled = true)
+    private static MenuFlyoutItem Align(MenuFlyoutItem item)
+    {
+        item.HorizontalContentAlignment = HorizontalAlignment.Left;
+        // The toggle draws its checkmark in the icon slot, so the ordinary rows only need one gutter.
+        item.Resources["MenuFlyoutItemPlaceholderThemeThickness"] = new Thickness(0);
+        item.Resources["MenuFlyoutItemDoublePlaceholderThemeThickness"] = new Thickness(28, 0, 0, 0);
+        return item;
+    }
+
+    private void Add(uint command, string textKey, string glyph, bool enabled = true)
     {
         var icon = glyph == "\uE769"
             ? (IconElement)XamlReader.Load("<PathIcon xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' Data='M6,3 A0.65,0.65 0 0 1 6.65,3.65 L6.65,16.35 A0.65,0.65 0 0 1 5.35,16.35 L5.35,3.65 A0.65,0.65 0 0 1 6,3 Z M14,3 A0.65,0.65 0 0 1 14.65,3.65 L14.65,16.35 A0.65,0.65 0 0 1 13.35,16.35 L13.35,3.65 A0.65,0.65 0 0 1 14,3 Z'/>")
             : new FontIcon { Glyph = glyph };
-        var item = new MenuFlyoutItem { Text = text, Icon = icon, IsEnabled = enabled };
+        var item = Align(new MenuFlyoutItem { Icon = icon, IsEnabled = enabled });
+        UiLanguage.Bind(item, MenuFlyoutItem.TextProperty, textKey);
         item.Click += (_, _) => Select(command);
         _menu.Items.Add(item); _commands[command] = item;
     }
@@ -119,6 +133,8 @@ internal sealed class TrayMenuWindow : Window
     }
 
 #if DEBUG
+    internal string OpenLabelForTest => ((MenuFlyoutItem)_commands[TrayService.OpenCommand]).Text;
+
     internal bool StartupCheckAlignedForTest
     {
         get
@@ -127,7 +143,9 @@ internal sealed class TrayMenuWindow : Window
             var check = ((ToggleMenuFlyoutItem)_commands[TrayService.ToggleStartupCommand]).Icon;
             var first = open.TransformToVisual(null).TransformPoint(new Windows.Foundation.Point(open.ActualWidth / 2, 0));
             var second = check.TransformToVisual(null).TransformPoint(new Windows.Foundation.Point(check.ActualWidth / 2, 0));
-            return Math.Abs(first.X - second.X) < 1;
+            var openItem = (MenuFlyoutItem)_commands[TrayService.OpenCommand];
+            var iconInset = open.TransformToVisual(openItem).TransformPoint(new Windows.Foundation.Point(0, 0)).X;
+            return Math.Abs(first.X - second.X) < 1 && iconInset is >= 0 and < 24;
         }
     }
     internal (int X, int Y) CommandCenter(uint command)
@@ -157,7 +175,7 @@ internal sealed class TrayMenuWindow : Window
         if (path is not null)
         {
             var file = command == TrayService.ToggleStartupCommand ? ((ToggleMenuFlyoutItem)_commands[command]).IsChecked ? "tray-menu-startup-checked.png" : "tray-menu-startup.png"
-                : _commands[command] is MenuFlyoutItem { Text: "暂停记录" } ? "tray-menu-pause.png" : "tray-menu.png";
+                : _commands[command] is MenuFlyoutItem item && item.Text == L("PauseRecording") ? "tray-menu-pause.png" : "tray-menu.png";
             _ = Diagnostics.NativeWindowCapture.SaveOwnWindowAsync(popups[0], Path.Combine(path, file));
         }
         if (GetAncestor(WindowFromPoint(center), 2) != popups[0]) throw new InvalidOperationException("标准菜单项被其他窗口遮挡，停止点击");

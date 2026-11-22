@@ -8,7 +8,7 @@
         <Border x:Name="RenderBackdrop" Grid.RowSpan="2" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Visibility="Collapsed"/>
         <Grid x:Name="AppTitleBar" Height="48" Margin="16,0,140,0">
             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" IsHitTestVisible="False">
-                <Image x:Name="AppIcon" Source="ms-appx:///Assets/ClipFlow.256.png" Width="20" Height="20" AutomationProperties.Name="ClipFlow 图标"/>
+                <Image x:Name="AppIcon" Source="ms-appx:///Assets/ClipFlow.256.png" Width="20" Height="20" AutomationProperties.Name="{Binding Value, Source={StaticResource L_AppIcon}}"/>
                 <TextBlock Text="ClipFlow" FontSize="14" FontWeight="SemiBold"/>
             </StackPanel>
         </Grid>
@@ -23,13 +23,13 @@
                     <Setter Property="CornerRadius" Value="0"/>
                 </Style>
             </StackPanel.Resources>
-            <Button x:Name="CaptionMinimize" Style="{StaticResource CaptionButtonStyle}" Click="CaptionMinimize_Click" AutomationProperties.Name="最小化窗口" ToolTipService.ToolTip="最小化">
+            <Button x:Name="CaptionMinimize" Style="{StaticResource CaptionButtonStyle}" Click="CaptionMinimize_Click" AutomationProperties.Name="{Binding Value, Source={StaticResource L_MinimizeWindow}}" ToolTipService.ToolTip="{Binding Value, Source={StaticResource L_Minimize}}">
                 <FontIcon Glyph="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
             </Button>
-            <Button x:Name="CaptionMaximize" Style="{StaticResource CaptionButtonStyle}" Click="CaptionMaximize_Click" AutomationProperties.Name="最大化窗口" ToolTipService.ToolTip="最大化">
+            <Button x:Name="CaptionMaximize" Style="{StaticResource CaptionButtonStyle}" Click="CaptionMaximize_Click" AutomationProperties.Name="{Binding Value, Source={StaticResource L_MaximizeWindow}}" ToolTipService.ToolTip="{Binding Value, Source={StaticResource L_Maximize}}">
                 <FontIcon x:Name="CaptionMaximizeGlyph" Glyph="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
             </Button>
-            <Button x:Name="CaptionClose" Style="{StaticResource CaptionButtonStyle}" Click="CaptionClose_Click" AutomationProperties.Name="关闭窗口并继续后台运行" ToolTipService.ToolTip="关闭窗口">
+            <Button x:Name="CaptionClose" Style="{StaticResource CaptionButtonStyle}" Click="CaptionClose_Click" AutomationProperties.Name="{Binding Value, Source={StaticResource L_CloseToTray}}" ToolTipService.ToolTip="{Binding Value, Source={StaticResource L_CloseWindow}}">
                 <FontIcon Glyph="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
             </Button>
         </StackPanel>
@@ -53,16 +53,16 @@
                 </ResourceDictionary>
             </NavigationView.Resources>
             <NavigationView.MenuItems>
-                <NavigationViewItem x:Name="RecentItem" Content="最近记录" Tag="recent"><NavigationViewItem.Icon><FontIcon Glyph="&#xE81C;"/></NavigationViewItem.Icon></NavigationViewItem>
-                <NavigationViewItem Content="收藏夹" Tag="favorites"><NavigationViewItem.Icon><FontIcon Glyph="&#xE734;"/></NavigationViewItem.Icon></NavigationViewItem>
+                <NavigationViewItem x:Name="RecentItem" Content="{Binding Value, Source={StaticResource L_Recent}}" Tag="recent"><NavigationViewItem.Icon><FontIcon Glyph="&#xE81C;"/></NavigationViewItem.Icon></NavigationViewItem>
+                <NavigationViewItem Content="{Binding Value, Source={StaticResource L_Favorites}}" Tag="favorites"><NavigationViewItem.Icon><FontIcon Glyph="&#xE734;"/></NavigationViewItem.Icon></NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem Content="设置" Tag="settings"><NavigationViewItem.Icon><FontIcon Glyph="&#xE713;"/></NavigationViewItem.Icon></NavigationViewItem>
+                <NavigationViewItem Content="{Binding Value, Source={StaticResource L_Settings}}" Tag="settings"><NavigationViewItem.Icon><FontIcon Glyph="&#xE713;"/></NavigationViewItem.Icon></NavigationViewItem>
             </NavigationView.FooterMenuItems>
             <NavigationView.PaneFooter>
                 <StackPanel x:Name="PaneFooterText" Margin="16,4,12,4" Orientation="Horizontal" Spacing="12" Visibility="Collapsed">
                     <FontIcon Glyph="&#xE72E;" Width="20" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-                    <TextBlock Text="仅在本机保存" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="{Binding Value, Source={StaticResource L_LocalOnly}}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                 </StackPanel>
             </NavigationView.PaneFooter>
             <Grid Margin="28,20,28,24" RowSpacing="16">
@@ -71,7 +71,7 @@
                     <TextBlock Text="{Binding PageTitle}" Style="{StaticResource TitleTextBlockStyle}"/>
                     <TextBlock Text="{Binding PageSubtitle}" Visibility="{Binding HistoryVisibility}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     <InfoBar x:Name="Feedback" IsOpen="False" IsClosable="True" Visibility="Collapsed" Margin="0,6,0,0">
-                        <InfoBar.ActionButton><Button Content="重试初始化" Command="{Binding RetryCommand}" Visibility="{Binding RetryVisibility}"/></InfoBar.ActionButton>
+                        <InfoBar.ActionButton><Button Content="{Binding Value, Source={StaticResource L_RetryInitialization}}" Command="{Binding RetryCommand}" Visibility="{Binding RetryVisibility}"/></InfoBar.ActionButton>
                     </InfoBar>
                 </StackPanel>
                 <views:HistoryView x:Name="HistoryContent" Grid.Row="1" Visibility="{Binding HistoryVisibility}"/>

@@ -10,7 +10,7 @@
   <Identity
     Name="OpticsValley.ClipFlow-"
     Publisher="CN=OpticsValley"
-    Version="1.1.0.0" />
+    Version="1.2.0.0" />
 
   <Properties>
     <DisplayName>ClipFlow</DisplayName>
@@ -24,6 +24,8 @@
 
   <Resources>
     <Resource Language="zh-CN"/>
+    <Resource Language="zh-TW"/>
+    <Resource Language="en-US"/>
   </Resources>
 
   <Applications>

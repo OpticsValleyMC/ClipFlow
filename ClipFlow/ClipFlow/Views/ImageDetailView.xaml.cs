@@ -1,3 +1,4 @@
+using static ClipFlow.Core.LocalizedStrings;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -98,10 +99,10 @@ public sealed partial class ImageDetailView : UserControl
         {
             var file = await StorageFile.GetFileFromPathAsync(_path);
             using var stream = await file.OpenReadAsync();
-            if (stream.Size > 64 * 1024 * 1024) throw new InvalidDataException("图片超过读取上限。");
+            if (stream.Size > 64 * 1024 * 1024) throw new InvalidDataException(L("ImageReadLimit"));
             var decoder = await BitmapDecoder.CreateAsync(stream);
             if (decoder.PixelWidth == 0 || decoder.PixelHeight == 0 || (ulong)decoder.PixelWidth * decoder.PixelHeight > 16_000_000)
-                throw new InvalidDataException("图片尺寸无效。");
+                throw new InvalidDataException(L("InvalidImageDimensions"));
             stream.Seek(0);
             // No decode-size limit: only the open detail view loads the original pixels.
             var bitmap = new BitmapImage();

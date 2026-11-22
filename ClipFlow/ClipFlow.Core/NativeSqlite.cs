@@ -7,9 +7,11 @@ public sealed class NativeSqlite : IDisposable
 {
     private IntPtr _db;
     private const int Row = 100, Done = 101;
-    public NativeSqlite(string path)
+    public NativeSqlite(string path) : this(path, readOnly: false) { }
+
+    internal NativeSqlite(string path, bool readOnly)
     {
-        var result = sqlite3_open_v2(path, out _db, 0x2 | 0x4 | 0x10000, IntPtr.Zero);
+        var result = sqlite3_open_v2(path, out _db, (readOnly ? 0x1 : 0x2 | 0x4) | 0x10000, IntPtr.Zero);
         if (result != 0) { var message = Error(); Dispose(); throw new IOException(message); }
         sqlite3_busy_timeout(_db, 1000);
     }

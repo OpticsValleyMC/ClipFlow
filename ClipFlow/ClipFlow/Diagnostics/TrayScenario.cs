@@ -1,4 +1,8 @@
 using System.Runtime.InteropServices;
+using ClipFlow.Core;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Controls;
 using ClipFlow.Services;
 using ClipFlow.ViewModels;
 using ClipFlow.Views;
@@ -24,6 +28,13 @@ internal static class TrayScenario
             Assert(tray.IsAvailable && tray.HasShellIcon(), "Shell 未注册托盘图标。");
             window.RestoreWindow(); await Task.Delay(250);
             await NativeWindowCapture.SaveAsync(hwnd, Path.Combine(vm.Store.RootPath, "tray-start.png"));
+            if (Environment.GetEnvironmentVariable("CLIPFLOW_SELF_TEST") == "tray-check")
+            {
+                await CheckLiveLanguageAsync(vm, (FrameworkElement)window.Content, Assert, WaitAsync);
+                window.RestoreWindow();
+                await Task.Delay(250);
+                report.Add("PASS: changing the language keeps the current window, refreshes settings and the open history panel, and saves the preference");
+            }
             Assert(tray.MenuLabelsForTest().SequenceEqual(new[] { AppInfo.VersionLabel, "打开 ClipFlow", vm.RecordingButton, "开机自启动", "退出" }), "托盘菜单内容不匹配。");
             report.Add("PASS: Shell icon registered; native menu contains app/version, open, recording toggle, exit");
             await vm.UpdateSettingsAsync(vm.Settings with { RecordingEnabled = true });
@@ -44,11 +55,27 @@ internal static class TrayScenario
             var checkedMenu = new TrayMenuWindow(_ => { });
             try
             {
-                await checkedMenu.ShowAsync(400, 400, vm.Settings.Theme, (true, true), new StartupSnapshot(true, true, "Checked-menu fixture"));
+                await checkedMenu.ShowAsync(400, 400, vm.Settings.Theme, (true, true), new StartupSnapshot(true, true, "StartupEnabledHelp"));
                 await Task.Delay(250);
                 Assert(checkedMenu.IsMenuOpen && checkedMenu.StartupCheckAlignedForTest, "开机勾选标记未与其他菜单图标对齐。");
                 checkedMenu.CommandCenter(TrayService.ToggleStartupCommand);
-                report.Add("PASS: checked startup mark aligns with native menu icons without changing real startup preferences");
+                report.Add("PASS: tray icons and the startup checkmark share the left column with no extra gutter");
+                if (Environment.GetEnvironmentVariable("CLIPFLOW_SELF_TEST") == "tray-check")
+                {
+                    var language = vm.Settings.Language;
+                    try
+                    {
+                        await vm.ChangeLanguageAsync(AppLanguage.English);
+                        await WaitAsync(() => checkedMenu.IsMenuOpen && checkedMenu.OpenLabelForTest == "Open ClipFlow");
+                        await vm.ChangeLanguageAsync(AppLanguage.TraditionalChinese);
+                        await WaitAsync(() => checkedMenu.IsMenuOpen && checkedMenu.OpenLabelForTest == "開啟 ClipFlow");
+                        await vm.ChangeLanguageAsync(AppLanguage.SimplifiedChinese);
+                        await WaitAsync(() => checkedMenu.IsMenuOpen && checkedMenu.OpenLabelForTest == "打开 ClipFlow");
+                        Assert(checkedMenu.StartupCheckAlignedForTest, "Changing language displaced the left-aligned menu icons.");
+                        report.Add("PASS: the open tray menu switches between English, Traditional Chinese, and Simplified Chinese in place");
+                    }
+                    finally { await vm.ChangeLanguageAsync(language); }
+                }
             }
             finally { checkedMenu.Shutdown(); }
             var thread = GetWindowThreadProcessId(hwnd, out _);
@@ -208,6 +235,41 @@ internal static class TrayScenario
         }
         catch (Exception ex) { report.Add("FAIL: " + ex); }
         await File.WriteAllLinesAsync(path, report);
+    }
+
+    private static async Task CheckLiveLanguageAsync(MainViewModel vm, FrameworkElement root, Action<bool, string> assert,
+        Func<Func<bool>, Task> wait)
+    {
+        var navigation = (NavigationView)root.FindName("Navigation");
+        var previousItem = navigation.SelectedItem;
+        var previousLanguage = vm.Settings.Language;
+        var settingsItem = navigation.FooterMenuItems.OfType<NavigationViewItem>().Single(item => Equals(item.Tag, "settings"));
+        var settings = (FrameworkElement)root.FindName("SettingsContent");
+        var language = (ComboBox)settings.FindName("LanguageBox");
+        var quick = new QuickHistoryWindow(vm, PasteTarget.Capture());
+        try
+        {
+            navigation.SelectedItem = settingsItem;
+            await wait(() => vm.PageTitle == "设置" && language.IsEnabled);
+            await quick.ToggleAsync();
+            var search = (TextBox)((FrameworkElement)quick.Content).FindName("SearchBox");
+            language.SelectedIndex = (int)AppLanguage.English;
+            await wait(() => language.IsEnabled && vm.PageTitle == "Settings" && Equals(settingsItem.Content, "Settings")
+                && search.PlaceholderText == "Search clipboard" && AutomationProperties.GetName(language) == "Display language");
+            assert(quick.IsOpen && ReferenceEquals(navigation.SelectedItem, settingsItem)
+                && await vm.Store.ReadLanguageAsync() == AppLanguage.English, "Language selection lost the current window, page, or preference.");
+            language.SelectedIndex = (int)AppLanguage.TraditionalChinese;
+            await wait(() => language.IsEnabled && vm.PageTitle == "設定" && Equals(settingsItem.Content, "設定")
+                && search.PlaceholderText == "搜尋剪貼簿" && AutomationProperties.GetName(language) == "顯示語言");
+            language.SelectedIndex = (int)AppLanguage.SimplifiedChinese;
+            await wait(() => language.IsEnabled && vm.PageTitle == "设置" && search.PlaceholderText == "搜索剪贴板");
+        }
+        finally
+        {
+            quick.Shutdown();
+            await vm.ChangeLanguageAsync(previousLanguage);
+            navigation.SelectedItem = previousItem;
+        }
     }
     [DllImport("user32")] private static extern IntPtr SendMessage(IntPtr hwnd, uint message, UIntPtr wParam, IntPtr lParam);
     [DllImport("user32")] private static extern bool IsWindowVisible(IntPtr hwnd);

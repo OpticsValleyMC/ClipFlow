@@ -1,3 +1,4 @@
+using static ClipFlow.Core.LocalizedStrings;
 using ClipFlow.Core;
 using ClipFlow.Services;
 using Microsoft.UI.Dispatching;
@@ -19,18 +20,25 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public event Action<AppSettings>? AppearanceChanged;
     public Func<uint, uint, bool>? RegisterShortcut { get; set; }
     public string ShortcutLabel => HotkeyService.Label(Settings.HotkeyModifiers, Settings.HotkeyKey);
-    public string ShortcutStatus { get; private set; } = "";
-    internal void SetShortcutStatus(string text) { ShortcutStatus = text; Raise(nameof(ShortcutStatus)); }
+    private string? _shortcutStatusKey;
+    public string ShortcutStatus => _shortcutStatusKey is { } key ? L(key) : "";
+    internal void SetShortcutStatus(string? key) { _shortcutStatusKey = key; Raise(nameof(ShortcutStatus)); }
+    internal void SetShortcutError(Exception error) => SetShortcutStatus(error is ShortcutException rejected ? rejected.ResourceKey : "OperationFailedStorage");
+
+    private sealed class ShortcutException(string resourceKey) : InvalidOperationException(L(resourceKey))
+    {
+        internal string ResourceKey { get; } = resourceKey;
+    }
     public async Task ChangeShortcutAsync(uint modifiers, uint key)
     {
-        if (modifiers == 2 && key == 0x56) throw new InvalidOperationException("Ctrl + V 用于粘贴，请选择其他快捷键");
-        if (RegisterShortcut?.Invoke(modifiers, key) != true) throw new InvalidOperationException("此快捷键已被占用或不可用，请换一个组合");
+        if (modifiers == 2 && key == 0x56) throw new ShortcutException("StandardPasteShortcut");
+        if (RegisterShortcut?.Invoke(modifiers, key) != true) throw new ShortcutException("ShortcutUnavailable");
         var previous = Settings;
         try { await UpdateSettingsAsync(Settings with { HotkeyModifiers = modifiers, HotkeyKey = key }); }
         catch { RegisterShortcut(previous.HotkeyModifiers, previous.HotkeyKey); Settings = previous; SettingsChanged(); throw; }
     }
     public StartupService Startup { get; } = new();
-    private StartupSnapshot _startup = new(false, false, "正在读取 Windows 启动设置…");
+    private StartupSnapshot _startup = new(false, false, "ReadingStartup");
     private int _startupOperations;
     private Task? _startupRefresh;
     public bool StartupEnabled
@@ -40,6 +48,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
     public bool CanChangeStartup => _startupOperations == 0 && _startup.CanChange;
     public string StartupDescription => _startup.Description;
+    internal StartupSnapshot StartupStatus => _startup;
+    internal event Action? LanguageChanged;
     public event Action<string, bool>? Notice;
     public Func<RecordViewModel, Task>? DetailRequested { get; set; }
     public Func<bool, Task<bool>>? ConfirmClear { get; set; }
@@ -53,24 +63,27 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             Set(ref _ready, value); Raise(nameof(RetryVisibility)); Raise(nameof(RecordingLabel));
             Raise(nameof(RecordingButton)); Raise(nameof(RecordingEnabled)); Raise(nameof(RecordingSeverity)); Raise(nameof(CanClearHistory));
+            Raise(nameof(CanChangeLanguage));
         }
     }
     public Visibility RetryVisibility => IsReady ? Visibility.Collapsed : Visibility.Visible;
-    public string PageTitle => _page switch { "favorites" => "收藏夹", "settings" => "设置", _ => "最近记录" };
+    public string PageTitle => _page switch { "favorites" => L("Favorites"), "settings" => L("Settings"), _ => L("Recent") };
     public string PageSubtitle => _page switch
     {
-        "favorites" => "留住灵感，让重要内容随手可得",
-        _ => "复制过的内容，都在这里"
+        "favorites" => L("FavoritesSubtitle"),
+        _ => L("RecentSubtitle")
     };
     public Visibility HistoryVisibility => _page == "settings" ? Visibility.Collapsed : Visibility.Visible;
     public Visibility SettingsVisibility => _page == "settings" ? Visibility.Visible : Visibility.Collapsed;
     public Visibility EmptyVisibility => Records.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-    public string EmptyTitle => !IsReady ? "正在准备本地记录" : Search.Length > 0 || _typeFilter != 0 ? "没有找到匹配的内容" : _page == "favorites" ? "收藏你的第一条记录" : "从一次复制开始";
-    public string EmptyDescription => !IsReady ? "如果初始化失败，可点击重试。已有数据会被保留。" : Search.Length > 0 || _typeFilter != 0 ? "尝试其他关键词，或切换内容类型。" : _page == "favorites" ? "点击记录上的星标，把常用内容收藏到这里。" : "在其他应用中复制文本或图片，ClipFlow 会在运行期间为你保存。";
-    public string CountLabel => $"{Records.Count} 条记录";
-    public string SearchPlaceholder => _page == "favorites" ? "搜索收藏内容" : "搜索历史记录";
-    public string RecordingLabel => !IsReady ? "记录不可用，请检查本地存储。" : Settings.RecordingEnabled ? "ClipFlow 正在记录" : "记录已暂停，复制的内容将不会被保存。点击「继续记录」恢复。";
-    public string RecordingButton => !IsReady ? "记录不可用" : Settings.RecordingEnabled ? "暂停记录" : "继续记录";
+    public string EmptyTitle => !IsReady ? L("PreparingHistory") : Search.Length > 0 || _typeFilter != 0 ? L("NoMatches") : _page == "favorites" ? L("FirstFavorite") : L("StartByCopying");
+    public string EmptyDescription => !IsReady ? L("RetryHelp") : Search.Length > 0 || _typeFilter != 0 ? L("SearchHelp") : _page == "favorites" ? L("FavoriteHelp") : L("FirstCopyHelp");
+    public string CountLabel => L("CountFormat", Records.Count);
+    public string AboutVersion => AppInfo.AboutVersion;
+    public string AboutAuthor => AppInfo.AboutAuthor;
+    public string SearchPlaceholder => _page == "favorites" ? L("SearchFavorites") : L("SearchHistory");
+    public string RecordingLabel => !IsReady ? L("RecordingStorageUnavailable") : Settings.RecordingEnabled ? L("RecordingActive") : L("RecordingPausedHelp");
+    public string RecordingButton => !IsReady ? L("RecordingUnavailable") : Settings.RecordingEnabled ? L("PauseRecording") : L("ResumeRecording");
     public InfoBarSeverity RecordingSeverity => !IsReady ? InfoBarSeverity.Error : Settings.RecordingEnabled ? InfoBarSeverity.Success : InfoBarSeverity.Warning;
     public bool CanClearHistory => IsReady && _all.Count > 0;
     public Visibility ClearHistoryVisibility => _page == "recent" ? Visibility.Visible : Visibility.Collapsed;
@@ -79,6 +92,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public int ThemeIndex { get => (int)Settings.Theme; set { if (value is >= 0 and <= 2 && value != ThemeIndex) _ = ApplySettingsFromBindingAsync(Settings with { Theme = (ThemeMode)value }); } }
     public int BackdropIndex { get => (int)Settings.Backdrop; set { if (value is >= 0 and <= 3 && value != BackdropIndex) _ = ApplySettingsFromBindingAsync(Settings with { Backdrop = (BackdropLevel)value }); } }
     public int FavoriteSortIndex { get => (int)Settings.FavoriteSort; set { if (value is >= 0 and <= 2 && value != FavoriteSortIndex) _ = ChangeSortAsync((FavoriteSortMode)value); } }
+    private bool _changingLanguage;
+    public int LanguageIndex => (int)Settings.Language;
+    public bool CanChangeLanguage => IsReady && !_changingLanguage;
     public Visibility FavoritesVisibility => _page == "favorites" ? Visibility.Visible : Visibility.Collapsed;
     public bool IsFavoritesPage => _page == "favorites";
     public bool RecordingEnabled { get => IsReady && Settings.RecordingEnabled; set { if (IsReady && value != Settings.RecordingEnabled) _ = ApplySettingsFromBindingAsync(Settings with { RecordingEnabled = value }); } }
@@ -210,20 +226,49 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
     public Task DeleteAsync(RecordViewModel item) => ExclusiveAsync(async () =>
     {
-        await Store.DeleteAsync(item.Id); await ReloadAsync(); Notice?.Invoke("记录已删除", false);
+        await Store.DeleteAsync(item.Id); await ReloadAsync(); Notice?.Invoke(L("ItemDeleted"), false);
     });
     public Task ShowDetailAsync(RecordViewModel item) => DetailRequested?.Invoke(item) ?? Task.CompletedTask;
+    public async Task ChangeLanguageAsync(AppLanguage language)
+    {
+        if (!CanChangeLanguage || language == Settings.Language) return;
+        _changingLanguage = true;
+        Raise(nameof(CanChangeLanguage));
+        try
+        {
+            await ExclusiveAsync(async () =>
+            {
+                if (!IsReady) return;
+                await Store.SaveLanguageAsync(language);
+                Settings = Settings with { Language = language };
+                ApplyLanguage();
+                Raise(nameof(LanguageIndex));
+            });
+        }
+        finally { _changingLanguage = false; Raise(nameof(CanChangeLanguage)); }
+    }
+
+    private void ApplyLanguage()
+    {
+        UiLanguage.Apply(Settings.Language);
+        foreach (var record in _all) record.RefreshLanguage();
+        foreach (var property in new[] { nameof(PageTitle), nameof(PageSubtitle), nameof(EmptyTitle), nameof(EmptyDescription),
+            nameof(CountLabel), nameof(SearchPlaceholder), nameof(RecordingLabel), nameof(RecordingButton),
+            nameof(StartupDescription), nameof(AboutVersion), nameof(AboutAuthor), nameof(ShortcutStatus) }) Raise(property);
+        LanguageChanged?.Invoke();
+    }
+
     public async Task UpdateSettingsAsync(AppSettings settings)
     {
         if (!IsReady) return;
-        Settings = settings with { HistoryLimit = Math.Clamp(settings.HistoryLimit, 10, 10000) };
+        Settings = settings with { Language = Settings.Language, HistoryLimit = Math.Clamp(settings.HistoryLimit, 10, 10000) };
         _clipboard.SetEnabled(Settings.RecordingEnabled); SettingsChanged();
         await ExclusiveAsync(async () => { await Store.SaveSettingsAsync(Settings); await ReloadAsync(); });
     }
     private void SettingsChanged()
     {
         Raise(nameof(ShortcutLabel));
-        foreach (var name in new[] { nameof(ThemeIndex), nameof(BackdropIndex), nameof(FavoriteSortIndex), nameof(RecordingEnabled), nameof(HistoryLimit), nameof(HistoryLimitValue), nameof(RecordingLabel), nameof(RecordingButton), nameof(RecordingSeverity) }) Raise(name);
+        foreach (var name in new[] { nameof(ThemeIndex), nameof(BackdropIndex), nameof(FavoriteSortIndex), nameof(LanguageIndex), nameof(RecordingEnabled), nameof(HistoryLimit), nameof(HistoryLimitValue), nameof(RecordingLabel), nameof(RecordingButton), nameof(RecordingSeverity) }) Raise(name);
         ThemeChanged?.Invoke(Settings.Theme);
         AppearanceChanged?.Invoke(Settings);
     }
@@ -237,14 +282,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             {
                 if (IsReady) await Store.ClearAsync(allData);
                 else { await Store.ResetBrokenDataAsync(); IsReady = true; _clipboard.Start(true); }
-                if (allData) { Settings = new AppSettings(); _clipboard.SetEnabled(true); SettingsChanged(); }
+                if (allData) { Settings = new AppSettings(); _clipboard.SetEnabled(true); ApplyLanguage(); SettingsChanged(); }
                 await ReloadAsync();
             });
-            Notice?.Invoke(allData ? "本地记录、图片和设置已清空" : "历史记录和图片已清空", false);
+            Notice?.Invoke(allData ? L("AllDataCleared") : L("HistoryCleared"), false);
         }
         finally { _clipboard.Resume(); }
     }
-    public void ReportError(Exception ex) => Notice?.Invoke(ex is InvalidDataException ? ex.Message : "操作未完成，请重试。已有数据库会被保留；请检查本地目录的访问权限和可用空间。", true);
+    public void ReportError(Exception ex) => Notice?.Invoke(ex is InvalidDataException ? ex.Message : L("OperationFailedStorage"), true);
     public void Dispose() => _clipboard.Dispose();
     public async Task ShutdownAsync()
     {

@@ -1,6 +1,6 @@
 # Microsoft Store 与 GitHub 发布
 
-维护者：OpticsValley。应用版本：1.1.0.0。当前正式打包目标：Windows 10 / 11 x64，最低 10.0.19041.0。
+维护者：OpticsValley。应用版本：1.2.0.0。当前正式打包目标：Windows 10 / 11 x64，最低 10.0.19041.0。
 
 ## 身份与清单
 
@@ -12,11 +12,11 @@
 | Package/Identity/Publisher | `CN=3F646DDF-EFA2-4801-82BE-82D7E5808841` |
 | Package/Properties/PublisherDisplayName | `OpticsValley` |
 | DisplayName | `ClipFlow - 剪贴板工具`（与 Partner Center 保留名称一致） |
-| Version | `1.1.0.0` |
+| Version | `1.2.0.0` |
 | TargetDeviceFamily | `Windows.Desktop` |
 | MinVersion | `10.0.19041.0` |
 | MaxVersionTested | `10.0.22621.0`（与目标框架一致，打包工具生成值） |
-| 语言 | `zh-CN` |
+| 语言 | `zh-CN`, `zh-TW`, `en-US` |
 
 本次运行验收机器为 Windows 11 build 26300；最低系统和 MaxVersionTested 不是该机器版本的自动映射。Logo 指向 Assets 的逻辑资源名，实际带 scale / targetsize 的 PNG 由资源系统解析。不要将图标资源加入测试图片忽略规则。没有手机/AI 清单声明。
 

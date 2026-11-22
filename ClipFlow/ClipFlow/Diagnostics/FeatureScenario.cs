@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Automation.Provider;
+using Microsoft.Win32;
 using Windows.ApplicationModel;
 
 namespace ClipFlow.Diagnostics;
@@ -37,15 +38,24 @@ internal static class FeatureScenario
             native.Current = StartupTaskState.EnabledByPolicy;
             Assert((await startup.SetEnabledAsync(false)) is { Enabled: true, CanChange: false } && native.Disables == 1, "不应覆盖系统启用策略。");
             var unsupported = new StartupService(() => Task.FromResult<IStartupRegistration?>(null));
-            Assert((await unsupported.SetEnabledAsync(true)) is { Enabled: false, CanChange: false }, "无安装身份时不应伪造启用状态。");
+            Assert((await unsupported.SetEnabledAsync(true)) is { Enabled: false, CanChange: false }, "无启动注册能力时不应伪造启用状态。");
             await vm.RefreshStartupAsync();
             Assert(!vm.CanChangeStartup && !vm.StartupEnabled, "隔离便携验收不能改变真实开机设置。");
+            await CheckPortableStartupAsync(vm.Store.RootPath, Assert);
 
             await vm.UpdateSettingsAsync(vm.Settings with { Backdrop = BackdropLevel.Solid });
             Assert(window.SystemBackdrop is null && ((FrameworkElement)root.FindName("BackdropFallback")).Visibility == Visibility.Visible, "纯色模式未关闭材质。");
             var settingsView = (FrameworkElement)root.FindName("SettingsContent");
             var backdropBox = (ComboBox)settingsView.FindName("BackdropBox");
             navigate("settings"); await Task.Delay(100);
+            var languageBox = (ComboBox)settingsView.FindName("LanguageBox");
+            Assert(languageBox.IsEnabled && languageBox.Items.Count == 4 && languageBox.SelectedIndex == (int)original.Language,
+                "设置页未显示当前语言和全部选项。");
+            languageBox.SelectedIndex = (int)AppLanguage.English;
+            await WaitAsync(() => vm.Settings.Language == AppLanguage.English);
+            Assert(await new HistoryStore(vm.Store.RootPath).ReadLanguageAsync() == AppLanguage.English, "语言选择未写入本地设置。");
+            languageBox.SelectedIndex = (int)original.Language;
+            await WaitAsync(() => vm.Settings.Language == original.Language);
             var expand = (IExpandCollapseProvider)FrameworkElementAutomationPeer.CreatePeerForElement(backdropBox).GetPattern(PatternInterface.ExpandCollapse);
             expand.Expand(); await Task.Delay(100);
             await NativeKeyboard.PressAsync(0x24); // Home, two Down keys, Enter: the actual keyboard selection path.
@@ -99,10 +109,52 @@ internal static class FeatureScenario
         finally
         {
             foreach (var item in added) await vm.DeleteAsync(item);
+            await vm.ChangeLanguageAsync(original.Language);
             await vm.UpdateSettingsAsync(original);
             navigate("recent");
         }
     }
+
+    private static async Task CheckPortableStartupAsync(string dataRoot, Action<bool, string> assert)
+    {
+        const string testParent = @"Software\ClipFlow\StartupAcceptance";
+        var root = testParent + "\\" + Guid.NewGuid().ToString("N");
+        var runPath = root + "\\Run";
+        var approvalPath = root + "\\Approved";
+        var executable = Path.Combine(dataRoot, "ClipFlow portable fixture.exe");
+        File.WriteAllBytes(executable, []);
+        try
+        {
+            var registration = new PortableStartupRegistration(executable, runPath, approvalPath);
+            var startup = new StartupService(() => Task.FromResult<IStartupRegistration?>(registration));
+            assert((await startup.RefreshAsync()) is { Enabled: false, CanChange: true }, "便携版自启动应默认关闭。");
+            assert((await startup.SetEnabledAsync(true)).Enabled, "便携版未启用自启动。");
+            using (var run = Registry.CurrentUser.OpenSubKey(runPath))
+                assert(run?.GetValue(PortableStartupRegistration.ValueName) as string == $"\"{executable}\" --startup", "便携版启动命令未正确引用路径和后台参数。");
+
+            using (var approval = Registry.CurrentUser.CreateSubKey(approvalPath))
+            {
+                approval.SetValue(PortableStartupRegistration.ValueName, BitConverter.GetBytes(3u));
+                assert((await startup.SetEnabledAsync(true)) is { Enabled: false, CanChange: false }, "便携版应尊重 Windows 禁用状态。");
+                approval.DeleteValue(PortableStartupRegistration.ValueName);
+            }
+
+            File.Delete(executable);
+            assert((await startup.RefreshAsync()) is { Enabled: false, CanChange: true }, "便携版移动后应可重新注册自启动。");
+            File.WriteAllBytes(executable, []);
+            assert(!(await startup.SetEnabledAsync(false)).Enabled, "关闭便携版自启动失败。");
+            using var cleared = Registry.CurrentUser.OpenSubKey(runPath);
+            assert(cleared?.GetValue(PortableStartupRegistration.ValueName) is null, "便携版启动项没有被移除。");
+        }
+        finally
+        {
+            Registry.CurrentUser.DeleteSubKey(runPath, throwOnMissingSubKey: false);
+            Registry.CurrentUser.DeleteSubKey(approvalPath, throwOnMissingSubKey: false);
+            Registry.CurrentUser.DeleteSubKey(root, throwOnMissingSubKey: false);
+            File.Delete(executable);
+        }
+    }
+
     private sealed class FakeStartup : IStartupRegistration
     {
         internal StartupTaskState Current = StartupTaskState.Disabled;

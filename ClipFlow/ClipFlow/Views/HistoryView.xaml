@@ -17,20 +17,20 @@
         <Grid Grid.Row="1" ColumnSpacing="12">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="112"/></Grid.ColumnDefinitions>
             <TextBox Text="{Binding Search, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="{Binding SearchPlaceholder}" AutomationProperties.Name="{Binding SearchPlaceholder}"/>
-            <ComboBox Grid.Column="1" SelectedIndex="{Binding TypeFilter, Mode=TwoWay}" HorizontalAlignment="Stretch" AutomationProperties.Name="内容类型">
-                <ComboBoxItem Content="全部类型"/><ComboBoxItem Content="文本"/><ComboBoxItem Content="图片"/>
+            <ComboBox Grid.Column="1" SelectedIndex="{Binding TypeFilter, Mode=TwoWay}" HorizontalAlignment="Stretch" AutomationProperties.Name="{Binding Value, Source={StaticResource L_ContentType}}">
+                <ComboBoxItem Content="{Binding Value, Source={StaticResource L_AllTypes}}"/><ComboBoxItem Content="{Binding Value, Source={StaticResource L_Text}}"/><ComboBoxItem Content="{Binding Value, Source={StaticResource L_Image}}"/>
             </ComboBox>
         </Grid>
         <Grid Grid.Row="2">
             <TextBlock Text="{Binding CountLabel}" VerticalAlignment="Center" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
-            <Button x:Name="ClearHistoryButton" Content="清空历史" Command="{Binding ClearHistoryCommand}" HorizontalAlignment="Right" IsEnabled="{Binding CanClearHistory}" Visibility="{Binding ClearHistoryVisibility}"/>
-            <ComboBox x:Name="FavoriteSortBox" SelectedIndex="{Binding FavoriteSortIndex, Mode=TwoWay}" HorizontalAlignment="Right" Width="168" Visibility="{Binding FavoritesVisibility}" IsEnabled="{Binding IsReady}" AutomationProperties.Name="收藏排序">
-                <ComboBoxItem Content="最近复制优先"/><ComboBoxItem Content="最早复制优先"/><ComboBoxItem Content="按内容名称排序"/>
+            <Button x:Name="ClearHistoryButton" Content="{Binding Value, Source={StaticResource L_ClearHistory}}" Command="{Binding ClearHistoryCommand}" HorizontalAlignment="Right" IsEnabled="{Binding CanClearHistory}" Visibility="{Binding ClearHistoryVisibility}"/>
+            <ComboBox x:Name="FavoriteSortBox" SelectedIndex="{Binding FavoriteSortIndex, Mode=TwoWay}" HorizontalAlignment="Right" Width="168" Visibility="{Binding FavoritesVisibility}" IsEnabled="{Binding IsReady}" AutomationProperties.Name="{Binding Value, Source={StaticResource L_FavoriteSort}}">
+                <ComboBoxItem Content="{Binding Value, Source={StaticResource L_NewestFirst}}"/><ComboBoxItem Content="{Binding Value, Source={StaticResource L_OldestFirst}}"/><ComboBoxItem Content="{Binding Value, Source={StaticResource L_SortByContent}}"/>
             </ComboBox>
         </Grid>
         <ListView x:Name="HistoryList" Grid.Row="3" ItemsSource="{Binding Records}" SelectionMode="None" IsItemClickEnabled="False"
             HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-            ScrollViewer.HorizontalScrollMode="Disabled" AutomationProperties.Name="剪贴板历史记录">
+            ScrollViewer.HorizontalScrollMode="Disabled" AutomationProperties.Name="{Binding Value, Source={StaticResource L_HistoryList}}">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem"><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0,0,0,12"/><Setter Property="IsTabStop" Value="False"/></Style>
             </ListView.ItemContainerStyle>

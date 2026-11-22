@@ -4,10 +4,10 @@
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <ContentControl x:Name="ZoomControls" IsEnabled="False" IsTabStop="False" HorizontalContentAlignment="Stretch">
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button x:Name="FitButton" Content="适应窗口" Click="Fit_Click"/>
-            <Button x:Name="ActualButton" Content="100%" Click="Actual_Click" AutomationProperties.Name="按原始像素查看图片"/>
-            <Button x:Name="ZoomOutButton" Content="−" Width="40" Click="ZoomOut_Click" AutomationProperties.Name="缩小图片" ToolTipService.ToolTip="缩小"/>
-            <Button x:Name="ZoomInButton" Content="+" Width="40" Click="ZoomIn_Click" AutomationProperties.Name="放大图片" ToolTipService.ToolTip="放大"/>
+            <Button x:Name="FitButton" Content="{Binding Value, Source={StaticResource L_FitImage}}" Click="Fit_Click"/>
+            <Button x:Name="ActualButton" Content="100%" Click="Actual_Click" AutomationProperties.Name="{Binding Value, Source={StaticResource L_ActualImageSize}}"/>
+            <Button x:Name="ZoomOutButton" Content="−" Width="40" Click="ZoomOut_Click" AutomationProperties.Name="{Binding Value, Source={StaticResource L_ZoomOutImage}}" ToolTipService.ToolTip="{Binding Value, Source={StaticResource L_ZoomOut}}"/>
+            <Button x:Name="ZoomInButton" Content="+" Width="40" Click="ZoomIn_Click" AutomationProperties.Name="{Binding Value, Source={StaticResource L_ZoomInImage}}" ToolTipService.ToolTip="{Binding Value, Source={StaticResource L_ZoomIn}}"/>
             <TextBlock x:Name="ZoomLabel" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
           </StackPanel>
         </ContentControl>
@@ -16,10 +16,10 @@
                 <ScrollViewer x:Name="PreviewScroll" ZoomMode="Enabled" MinZoomFactor="0.1" MaxZoomFactor="8"
                     HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Auto"
                     VerticalScrollBarVisibility="Auto" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" ViewChanged="Scroll_ViewChanged">
-                    <Image x:Name="OriginalImage" Stretch="Fill" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.Name="原始图片预览，滚动鼠标滚轮缩放，按住鼠标左键拖动" ToolTipService.ToolTip="滚轮缩放 · 按住左键拖动"/>
+                    <Image x:Name="OriginalImage" Stretch="Fill" HorizontalAlignment="Center" VerticalAlignment="Center" AutomationProperties.Name="{Binding Value, Source={StaticResource L_ImagePreviewHelp}}" ToolTipService.ToolTip="{Binding Value, Source={StaticResource L_ImagePanTip}}"/>
                 </ScrollViewer>
                 <ProgressRing x:Name="LoadingRing" IsActive="True" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <TextBlock x:Name="Failure" Text="图片无法加载，文件可能已丢失或损坏。" TextWrapping="Wrap" TextAlignment="Center"
+                <TextBlock x:Name="Failure" Text="{Binding Value, Source={StaticResource L_ImageUnavailable}}" TextWrapping="Wrap" TextAlignment="Center"
                     Margin="24" Visibility="Collapsed" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
             </Grid>
         </Border>

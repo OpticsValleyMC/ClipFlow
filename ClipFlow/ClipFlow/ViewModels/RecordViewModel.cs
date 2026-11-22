@@ -1,3 +1,4 @@
+using static ClipFlow.Core.LocalizedStrings;
 using ClipFlow.Core;
 using ClipFlow.Services;
 using Microsoft.UI.Xaml;
@@ -16,7 +17,7 @@ public sealed class RecordViewModel : ObservableObject
     {
         get
         {
-            if (Record.Text is not { } text) return "查看图片";
+            if (Record.Text is not { } text) return L("ViewImage");
             var match = SearchQuery.Length > 0 ? text.IndexOf(SearchQuery, StringComparison.OrdinalIgnoreCase) : -1;
             var start = Math.Max(0, match - 80);
             if (start > 0 && char.IsLowSurrogate(text[start])) start--;
@@ -28,7 +29,7 @@ public sealed class RecordViewModel : ObservableObject
     private int _copyVersion;
     public bool IsCopied { get; private set; }
     public string CopyGlyph => IsCopied ? "\uE73E" : "\uE8C8";
-    public string CopyLabel => IsCopied ? "已复制" : "复制记录";
+    public string CopyLabel => IsCopied ? L("Copied") : L("CopyItem");
     internal async Task MarkCopiedAsync()
     {
         var version = ++_copyVersion;
@@ -37,18 +38,18 @@ public sealed class RecordViewModel : ObservableObject
         if (version != _copyVersion) return;
         IsCopied = false; Raise(nameof(IsCopied)); Raise(nameof(CopyGlyph)); Raise(nameof(CopyLabel));
     }
-    public string DetailHint => Record.Kind == ContentKind.Text ? $"查看全文 · {Record.Text?.Length ?? 0:N0} 字符" : "查看高清原图";
-    public string KindLabel => Record.Kind == ContentKind.Text ? "文本" : "图片";
+    public string DetailHint => Record.Kind == ContentKind.Text ? L("FullTextHintFormat", Record.Text?.Length ?? 0) : L("ViewOriginalImage");
+    public string KindLabel => Record.Kind == ContentKind.Text ? L("Text") : L("Image");
     public string TypeGlyph => Record.Kind == ContentKind.Text ? "\uE8A5" : "\uEB9F";
-    public string Timestamp => Record.CopiedAt.ToLocalTime().ToString("MM 月 dd 日 · HH:mm:ss");
-    public string Dimensions => $"{Record.Width} × {Record.Height} 像素";
+    public string Timestamp => Record.CopiedAt.ToLocalTime().ToString(L("TimestampFormat"), LocalizedStrings.Culture);
+    public string Dimensions => L("DimensionsFormat", Record.Width, Record.Height);
     public string FavoriteGlyph => Record.IsFavorite ? "\uE735" : "\uE734";
-    public string FavoriteLabel => Record.IsFavorite ? "取消收藏" : "收藏";
+    public string FavoriteLabel => Record.IsFavorite ? L("RemoveFavorite") : L("Favorite");
     public Visibility FavoriteVisibility => Record.IsFavorite ? Visibility.Visible : Visibility.Collapsed;
     private readonly MainViewModel _owner;
     public Visibility PinActionVisibility => Record.IsFavorite && _owner.IsFavoritesPage ? Visibility.Visible : Visibility.Collapsed;
     public Visibility PinnedVisibility => Record.IsPinned && _owner.IsFavoritesPage ? Visibility.Visible : Visibility.Collapsed;
-    public string PinLabel => Record.IsPinned ? "取消置顶" : "置顶收藏";
+    public string PinLabel => Record.IsPinned ? L("Unpin") : L("PinFavorite");
     public string PinGlyph => Record.IsPinned ? "\uE77A" : "\uE718";
     public ICommand PinCommand { get; }
     public Visibility TextVisibility => Record.Kind == ContentKind.Text ? Visibility.Visible : Visibility.Collapsed;
@@ -107,6 +108,11 @@ public sealed class RecordViewModel : ObservableObject
         Raise(nameof(PinLabel)); Raise(nameof(PinGlyph)); RefreshPage();
     }
     public void RefreshPage() { Raise(nameof(PinActionVisibility)); Raise(nameof(PinnedVisibility)); Raise(nameof(Preview)); Raise(nameof(SearchQuery)); }
+    internal void RefreshLanguage()
+    {
+        foreach (var property in new[] { nameof(Preview), nameof(CopyLabel), nameof(DetailHint), nameof(KindLabel),
+            nameof(Timestamp), nameof(Dimensions), nameof(FavoriteLabel), nameof(PinLabel) }) Raise(property);
+    }
     public void MarkImageFailed()
     {
         _imageFailed = true; Raise(nameof(ImageFailureVisibility)); Raise(nameof(ImagePreviewVisibility));

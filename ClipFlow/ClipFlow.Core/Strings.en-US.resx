@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+    <resheader name="version"><value>2.0</value></resheader>
+    <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <data name="About" xml:space="preserve"><value>About</value></data>
+    <data name="ActionFailed" xml:space="preserve"><value>The operation failed. Try again.</value></data>
+    <data name="ActualImageSize" xml:space="preserve"><value>View image at actual size</value></data>
+    <data name="AllDataCleared" xml:space="preserve"><value>Local items, images, and settings cleared</value></data>
+    <data name="AllRecords" xml:space="preserve"><value>All items</value></data>
+    <data name="AllTypes" xml:space="preserve"><value>All types</value></data>
+    <data name="Appearance" xml:space="preserve"><value>Appearance</value></data>
+    <data name="AppIcon" xml:space="preserve"><value>ClipFlow icon</value></data>
+    <data name="AppTheme" xml:space="preserve"><value>App theme</value></data>
+    <data name="AuthorFormat" xml:space="preserve"><value>By {0}</value></data>
+    <data name="AutoPasteFailed" xml:space="preserve"><value>Copied. Return to the input field and press Ctrl+V to paste.</value></data>
+    <data name="Background" xml:space="preserve"><value>Background effect</value></data>
+    <data name="BackgroundHelp" xml:space="preserve"><value>Adjust the Mica effect. A solid background is used when the effect or system transparency is unavailable.</value></data>
+    <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+    <data name="Clear" xml:space="preserve"><value>Clear</value></data>
+    <data name="ClearAllAction" xml:space="preserve"><value>Clear all local data</value></data>
+    <data name="ClearDataHelp" xml:space="preserve"><value>Clearing history deletes all items, favorites, and images. Clearing all data also resets settings. Both actions require confirmation.</value></data>
+    <data name="ClearHistory" xml:space="preserve"><value>Clear history</value></data>
+    <data name="ClearHistoryAction" xml:space="preserve"><value>Clear clipboard history</value></data>
+    <data name="Clipboard" xml:space="preserve"><value>Clipboard</value></data>
+    <data name="ClipboardFlushFailed" xml:space="preserve"><value>Copied. Windows couldn't keep a clipboard copy after ClipFlow exits.</value></data>
+    <data name="ClipboardItems" xml:space="preserve"><value>Clipboard items</value></data>
+    <data name="ClipboardReadFailed" xml:space="preserve"><value>Couldn't read this clipboard item. Future copies will still be recorded.</value></data>
+    <data name="ClipboardTimeout" xml:space="preserve"><value>Reading the clipboard timed out. Future copies will still be recorded.</value></data>
+    <data name="Close" xml:space="preserve"><value>Close</value></data>
+    <data name="CloseEsc" xml:space="preserve"><value>Close · Esc</value></data>
+    <data name="ClosePanel" xml:space="preserve"><value>Close the panel</value></data>
+    <data name="CloseToTray" xml:space="preserve"><value>Close window and keep running in the background</value></data>
+    <data name="CloseWindow" xml:space="preserve"><value>Close window</value></data>
+    <data name="ConfirmClearAll" xml:space="preserve"><value>All items, favorites, and images will be deleted and settings reset. This can't be undone.</value></data>
+    <data name="ConfirmClearAllTitle" xml:space="preserve"><value>Clear all local data?</value></data>
+    <data name="ConfirmClearHistory" xml:space="preserve"><value>All items, favorites, and images will be deleted. This can't be undone.</value></data>
+    <data name="ConfirmClearHistoryTitle" xml:space="preserve"><value>Clear clipboard history?</value></data>
+    <data name="ContentType" xml:space="preserve"><value>Content type</value></data>
+    <data name="Copied" xml:space="preserve"><value>Copied</value></data>
+    <data name="Copy" xml:space="preserve"><value>Copy</value></data>
+    <data name="CopyFailed" xml:space="preserve"><value>Couldn't copy. Try again.</value></data>
+    <data name="CopyItem" xml:space="preserve"><value>Copy item</value></data>
+    <data name="CopyToPopulate" xml:space="preserve"><value>Text and images you copy appear here.</value></data>
+    <data name="CountFormat" xml:space="preserve"><value>Items: {0:N0}</value></data>
+    <data name="CurrentTextPage" xml:space="preserve"><value>Full text, current page</value></data>
+    <data name="Dark" xml:space="preserve"><value>Dark</value></data>
+    <data name="DatabaseRecoveryHelp" xml:space="preserve"><value>If the database fails to initialize, back up the local data folder first. You can confirm clearing all data to start with an empty database.</value></data>
+    <data name="DataManagement" xml:space="preserve"><value>Manage data</value></data>
+    <data name="DataOnDeviceHeading" xml:space="preserve"><value>Your data stays on your device</value></data>
+    <data name="DataOnDeviceHelp" xml:space="preserve"><value>ClipFlow never uploads clipboard data. History and images are stored in the current Windows user's local app data folder.</value></data>
+    <data name="DbNewerVersion" xml:space="preserve"><value>This database was created by a newer version of ClipFlow. Update the app to open it. Your data was kept.</value></data>
+    <data name="DbNotReady" xml:space="preserve"><value>The database is not ready. Retry initialization.</value></data>
+    <data name="Delete" xml:space="preserve"><value>Delete</value></data>
+    <data name="Deleted" xml:space="preserve"><value>Deleted</value></data>
+    <data name="DeleteItem" xml:space="preserve"><value>Delete item</value></data>
+    <data name="DimensionsFormat" xml:space="preserve"><value>{0} × {1} pixels</value></data>
+    <data name="Disabled" xml:space="preserve"><value>Off</value></data>
+    <data name="DisplayLanguage" xml:space="preserve"><value>Display language</value></data>
+    <data name="DragPanel" xml:space="preserve"><value>Drag the panel</value></data>
+    <data name="DragPanelShortcutFormat" xml:space="preserve"><value>{0} · Drag the panel</value></data>
+    <data name="Enabled" xml:space="preserve"><value>On</value></data>
+    <data name="EnableRecording" xml:space="preserve"><value>Enable clipboard recording</value></data>
+    <data name="Exit" xml:space="preserve"><value>Quit</value></data>
+    <data name="Favorite" xml:space="preserve"><value>Favorite</value></data>
+    <data name="Favorited" xml:space="preserve"><value>Added to favorites</value></data>
+    <data name="FavoriteHelp" xml:space="preserve"><value>Star an item to save it here.</value></data>
+    <data name="FavoriteRecords" xml:space="preserve"><value>Favorite items</value></data>
+    <data name="Favorites" xml:space="preserve"><value>Favorites</value></data>
+    <data name="FavoritesOnly" xml:space="preserve"><value>Show favorites only</value></data>
+    <data name="FavoriteSort" xml:space="preserve"><value>Sort favorites</value></data>
+    <data name="FavoritesSubtitle" xml:space="preserve"><value>Keep frequently used clipboard items handy.</value></data>
+    <data name="FirstCopyHelp" xml:space="preserve"><value>Copy text or images in another app while ClipFlow is running to save them here.</value></data>
+    <data name="FirstFavorite" xml:space="preserve"><value>Save your first favorite</value></data>
+    <data name="FitImage" xml:space="preserve"><value>Fit to window</value></data>
+    <data name="FollowSystem" xml:space="preserve"><value>Follow system</value></data>
+    <data name="FullText" xml:space="preserve"><value>Full text</value></data>
+    <data name="FullTextHintFormat" xml:space="preserve"><value>View full text · {0:N0} characters</value></data>
+    <data name="HistoryCleared" xml:space="preserve"><value>History and images cleared</value></data>
+    <data name="HistoryLimit" xml:space="preserve"><value>History limit</value></data>
+    <data name="HistoryLimitHelp" xml:space="preserve"><value>10–10,000 items. The oldest items, including favorites, are deleted when the limit is reached.</value></data>
+    <data name="HistoryLimitInput" xml:space="preserve"><value>Maximum history item count</value></data>
+    <data name="HistoryList" xml:space="preserve"><value>Clipboard history</value></data>
+    <data name="HistoryLoadFailed" xml:space="preserve"><value>Couldn't load history. Try again.</value></data>
+    <data name="Image" xml:space="preserve"><value>Image</value></data>
+    <data name="ImageLoadFailed" xml:space="preserve"><value>Couldn't load image</value></data>
+    <data name="ImagePanTip" xml:space="preserve"><value>Scroll to zoom · Hold left button to pan</value></data>
+    <data name="ImagePathOutsideStorage" xml:space="preserve"><value>The image path is outside the local image folder.</value></data>
+    <data name="ImagePreviewFormat" xml:space="preserve"><value>Image preview · {0}</value></data>
+    <data name="ImagePreviewHelp" xml:space="preserve"><value>Original image preview. Scroll to zoom and hold the left mouse button to pan.</value></data>
+    <data name="ImageReadLimit" xml:space="preserve"><value>The image exceeds the size limit.</value></data>
+    <data name="ImageRequiresLocalCopy" xml:space="preserve"><value>A local copy of the image is required.</value></data>
+    <data name="ImageThumbnail" xml:space="preserve"><value>Image thumbnail</value></data>
+    <data name="ImageTooLarge" xml:space="preserve"><value>Skipped an image larger than 64 MB.</value></data>
+    <data name="ImageTooManyPixels" xml:space="preserve"><value>Skipped an image larger than 16 million pixels.</value></data>
+    <data name="ImageUnavailable" xml:space="preserve"><value>Couldn't load the image. The file may be missing or damaged.</value></data>
+    <data name="InvalidHash" xml:space="preserve"><value>Invalid content hash.</value></data>
+    <data name="InvalidImageDimensions" xml:space="preserve"><value>The image dimensions are invalid.</value></data>
+    <data name="ItemDeleted" xml:space="preserve"><value>Item deleted</value></data>
+    <data name="LaunchAtSignIn" xml:space="preserve"><value>Launch at sign-in</value></data>
+    <data name="Light" xml:space="preserve"><value>Light</value></data>
+    <data name="LoadingHistory" xml:space="preserve"><value>Loading local history</value></data>
+    <data name="LocalOnly" xml:space="preserve"><value>Stored on this device</value></data>
+    <data name="Maximize" xml:space="preserve"><value>Maximize</value></data>
+    <data name="MaximizeWindow" xml:space="preserve"><value>Maximize window</value></data>
+    <data name="Minimize" xml:space="preserve"><value>Minimize</value></data>
+    <data name="MinimizeWindow" xml:space="preserve"><value>Minimize window</value></data>
+    <data name="MoreActions" xml:space="preserve"><value>More actions</value></data>
+    <data name="MoreItemActions" xml:space="preserve"><value>More actions for this item</value></data>
+    <data name="NewestFirst" xml:space="preserve"><value>Newest copied first</value></data>
+    <data name="NextPage" xml:space="preserve"><value>Next page</value></data>
+    <data name="NoClipboardItems" xml:space="preserve"><value>No clipboard items yet</value></data>
+    <data name="NoFavorites" xml:space="preserve"><value>No favorites yet</value></data>
+    <data name="NoMatches" xml:space="preserve"><value>No matching items</value></data>
+    <data name="OldestFirst" xml:space="preserve"><value>Oldest copied first</value></data>
+    <data name="OpenClipFlow" xml:space="preserve"><value>Open ClipFlow</value></data>
+    <data name="OperationFailedStorage" xml:space="preserve"><value>The operation failed. Your database was kept. Check permissions and available storage, then try again.</value></data>
+    <data name="PanelShortcut" xml:space="preserve"><value>Clipboard panel shortcut</value></data>
+    <data name="PanelShortcutHelp" xml:space="preserve"><value>Use this shortcut in any app to quickly find and copy clipboard items.</value></data>
+    <data name="PasteItem" xml:space="preserve"><value>Paste this item</value></data>
+    <data name="PastePanelHint" xml:space="preserve"><value>Click to paste · Esc to close</value></data>
+    <data name="Paused" xml:space="preserve"><value>Paused</value></data>
+    <data name="PauseRecording" xml:space="preserve"><value>Pause recording</value></data>
+    <data name="PinFavorite" xml:space="preserve"><value>Pin favorite</value></data>
+    <data name="Pinned" xml:space="preserve"><value>Pinned</value></data>
+    <data name="PreparingHistory" xml:space="preserve"><value>Preparing local history</value></data>
+    <data name="PreviousPage" xml:space="preserve"><value>Previous page</value></data>
+    <data name="ReadingStartup" xml:space="preserve"><value>Reading Windows startup settings…</value></data>
+    <data name="Recent" xml:space="preserve"><value>Recent</value></data>
+    <data name="RecentSubtitle" xml:space="preserve"><value>Find recently copied items.</value></data>
+    <data name="RecordClipboard" xml:space="preserve"><value>Record clipboard</value></data>
+    <data name="RecordClipboardHelp" xml:space="preserve"><value>Pausing stops new captures. Existing items stay available. ClipFlow keeps running in the system tray when you close the window.</value></data>
+    <data name="RecordingActive" xml:space="preserve"><value>ClipFlow is recording</value></data>
+    <data name="RecordingPausedHelp" xml:space="preserve"><value>Recording is paused. Select Resume recording to start saving new items again.</value></data>
+    <data name="RecordingStorageUnavailable" xml:space="preserve"><value>Recording is unavailable. Check local storage.</value></data>
+    <data name="RecordingUnavailable" xml:space="preserve"><value>Recording unavailable</value></data>
+    <data name="RemoveFavorite" xml:space="preserve"><value>Remove from favorites</value></data>
+    <data name="Restore" xml:space="preserve"><value>Restore</value></data>
+    <data name="RestoreDefaultShortcut" xml:space="preserve"><value>Restore default (Alt+V)</value></data>
+    <data name="RestoreWindow" xml:space="preserve"><value>Restore window</value></data>
+    <data name="ResumeRecording" xml:space="preserve"><value>Resume recording</value></data>
+    <data name="RetryHelp" xml:space="preserve"><value>If initialization fails, try again. Existing data is kept.</value></data>
+    <data name="RetryInitialization" xml:space="preserve"><value>Retry initialization</value></data>
+    <data name="Save" xml:space="preserve"><value>Save</value></data>
+    <data name="SearchClipboard" xml:space="preserve"><value>Search clipboard</value></data>
+    <data name="SearchFavorites" xml:space="preserve"><value>Search favorites</value></data>
+    <data name="SearchHelp" xml:space="preserve"><value>Try a different search or content type.</value></data>
+    <data name="SearchHistory" xml:space="preserve"><value>Search history</value></data>
+    <data name="SearchPanelItems" xml:space="preserve"><value>Search clipboard items in the panel</value></data>
+    <data name="Settings" xml:space="preserve"><value>Settings</value></data>
+    <data name="ShortcutConflict" xml:space="preserve"><value>That shortcut is taken or unavailable. Choose another combination.</value></data>
+    <data name="ShortcutKey" xml:space="preserve"><value>Shortcut key</value></data>
+    <data name="ShortcutModifiers" xml:space="preserve"><value>Shortcut modifiers</value></data>
+    <data name="ShortcutReset" xml:space="preserve"><value>Alt + V restored</value></data>
+    <data name="Shortcuts" xml:space="preserve"><value>Shortcuts</value></data>
+    <data name="ShortcutUnavailable" xml:space="preserve"><value>That shortcut is taken or unavailable. Choose another combination.</value></data>
+    <data name="ShortcutUpdated" xml:space="preserve"><value>Shortcut updated</value></data>
+    <data name="SolidBackground" xml:space="preserve"><value>Solid color</value></data>
+    <data name="SortByContent" xml:space="preserve"><value>By content name</value></data>
+    <data name="StandardMica" xml:space="preserve"><value>Mica · Standard</value></data>
+    <data name="StandardPasteShortcut" xml:space="preserve"><value>Ctrl + V is used for paste. Choose a different shortcut.</value></data>
+    <data name="StartByCopying" xml:space="preserve"><value>Start by copying something</value></data>
+    <data name="Startup" xml:space="preserve"><value>Startup</value></data>
+    <data name="StartupDisabledByPolicy" xml:space="preserve"><value>Startup is disabled by system policy.</value></data>
+    <data name="StartupDisabledByUser" xml:space="preserve"><value>Disabled in Windows. To enable ClipFlow again, go to Startup apps in Task Manager.</value></data>
+    <data name="StartupDisabledHelp" xml:space="preserve"><value>When enabled, ClipFlow starts in the system tray when you sign in.</value></data>
+    <data name="StartupEnabledByPolicy" xml:space="preserve"><value>Startup is enabled by system policy and can't be changed here.</value></data>
+    <data name="StartupEnabledHelp" xml:space="preserve"><value>Starts in the system tray when you sign in. Manage it in Task Manager under Startup apps.</value></data>
+    <data name="StartupReadFailed" xml:space="preserve"><value>Couldn't access startup settings. In Windows Settings, go to Apps → Startup.</value></data>
+    <data name="StartupUnavailable" xml:space="preserve"><value>Startup settings are unavailable in this Windows environment.</value></data>
+    <data name="StrongMica" xml:space="preserve"><value>Mica · Strong</value></data>
+    <data name="SubtleMica" xml:space="preserve"><value>Mica · Subtle</value></data>
+    <data name="Text" xml:space="preserve"><value>Text</value></data>
+    <data name="TextLengthFormat" xml:space="preserve"><value>{0:N0} characters</value></data>
+    <data name="TextPagedHelp" xml:space="preserve"><value> · Copy includes all pages</value></data>
+    <data name="TextPageFormat" xml:space="preserve"><value>Page {0} of {1}</value></data>
+    <data name="TextScrollHelp" xml:space="preserve"><value> · Scroll to view and select text</value></data>
+    <data name="TextTooLong" xml:space="preserve"><value>Skipped text longer than 2 million characters.</value></data>
+    <data name="ThemeHelp" xml:space="preserve"><value>Choose how ClipFlow looks.</value></data>
+    <data name="TimestampFormat" xml:space="preserve"><value>MMM d · HH:mm:ss</value></data>
+    <data name="TrayUnavailable" xml:space="preserve"><value>The system tray is unavailable. Closing the window will quit ClipFlow.</value></data>
+    <data name="Unfavorited" xml:space="preserve"><value>Removed from favorites</value></data>
+    <data name="Unpin" xml:space="preserve"><value>Unpin</value></data>
+    <data name="VersionFormat" xml:space="preserve"><value>Version {0}</value></data>
+    <data name="ViewFullContent" xml:space="preserve"><value>View full content</value></data>
+    <data name="ViewImage" xml:space="preserve"><value>View image</value></data>
+    <data name="ViewOriginalImage" xml:space="preserve"><value>View original image</value></data>
+    <data name="ZoomIn" xml:space="preserve"><value>Zoom in</value></data>
+    <data name="ZoomInImage" xml:space="preserve"><value>Zoom in on image</value></data>
+    <data name="ZoomOut" xml:space="preserve"><value>Zoom out</value></data>
+    <data name="ZoomOutImage" xml:space="preserve"><value>Zoom out of image</value></data>
+</root>

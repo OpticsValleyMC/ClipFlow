@@ -1,3 +1,4 @@
+using static ClipFlow.Core.LocalizedStrings;
 using System.Runtime.InteropServices;
 using ClipFlow.Core;
 using ClipFlow.Views;
@@ -96,13 +97,13 @@ internal sealed class TrayService : IDisposable
         if (menu == IntPtr.Zero) return menu;
         AppendMenu(menu, 0x3, 0, VersionLabel); // Disabled information row.
         AppendMenu(menu, 0x800, 0, null);
-        AppendMenu(menu, 0, OpenCommand, "打开 ClipFlow");
+        AppendMenu(menu, 0, OpenCommand, L("OpenClipFlow"));
         var state = _recordingState();
         AppendMenu(menu, state.Ready ? 0u : 0x3u, ToggleRecordingCommand,
-            !state.Ready ? "记录不可用" : state.Recording ? "暂停记录" : "继续记录");
+            !state.Ready ? L("RecordingUnavailable") : state.Recording ? L("PauseRecording") : L("ResumeRecording"));
         var startup = _startupState();
-        AppendMenu(menu, (startup.CanChange ? 0u : 0x3u) | (startup.Enabled ? 0x8u : 0u), ToggleStartupCommand, "开机自启动");
-        AppendMenu(menu, 0, ExitCommand, "退出");
+        AppendMenu(menu, (startup.CanChange ? 0u : 0x3u) | (startup.Enabled ? 0x8u : 0u), ToggleStartupCommand, L("LaunchAtSignIn"));
+        AppendMenu(menu, 0, ExitCommand, L("Exit"));
         return menu;
     }
     private void QueueMenu(UIntPtr coordinates)

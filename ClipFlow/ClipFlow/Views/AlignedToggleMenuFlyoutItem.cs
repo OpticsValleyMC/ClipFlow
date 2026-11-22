@@ -21,9 +21,8 @@ internal sealed class AlignedToggleMenuFlyoutItem : ToggleMenuFlyoutItem
         base.OnApplyTemplate();
         if (GetTemplateChild("CheckGlyph") is FontIcon check && VisualTreeHelper.GetParent(check) is Grid grid)
         {
-            // Reserve the native check gutter so text stays aligned with the
-            // other commands, then let the ordinary Icon presenter draw it.
-            grid.ColumnDefinitions[Grid.GetColumn(check)].Width = new GridLength(check.FontSize + check.Margin.Left + check.Margin.Right);
+            // The checkmark shares the regular icon column.
+            grid.ColumnDefinitions[Grid.GetColumn(check)].Width = new GridLength(0);
             check.Visibility = Visibility.Collapsed;
         }
         UpdateMark();

@@ -1,3 +1,4 @@
+using static ClipFlow.Core.LocalizedStrings;
 using ClipFlow.Core;
 using ClipFlow.Services;
 using ClipFlow.ViewModels;
@@ -23,6 +24,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        UiLanguage.BindLanguage(Root);
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "ClipFlow.ico"));
         var customTitleBar = WindowCompatibility.UseCustomTitleBar;
         ExtendsContentIntoTitleBar = customTitleBar;
@@ -58,13 +60,10 @@ public sealed partial class MainWindow : Window
         _feedbackTimer.Interval = TimeSpan.FromSeconds(3); _feedbackTimer.IsRepeating = false;
         _feedbackTimer.Tick += (_, _) => Feedback.IsOpen = false;
         Feedback.Closed += (_, _) => Feedback.Visibility = Visibility.Collapsed;
-#if DEBUG
-        _viewModel = new MainViewModel(DispatcherQueue, Environment.GetEnvironmentVariable("CLIPFLOW_TEST_DATA_ROOT"));
-#else
         _viewModel = new MainViewModel(DispatcherQueue);
-#endif
         _viewModel.AppearanceChanged += _themes.ApplySettings;
         _viewModel.Notice += ShowNotice;
+        _viewModel.LanguageChanged += RefreshLanguage;
         _viewModel.ConfirmClear = ConfirmClearAsync;
         _viewModel.DetailRequested = ShowDetailAsync;
         Root.DataContext = _viewModel;
@@ -74,7 +73,7 @@ public sealed partial class MainWindow : Window
         Root.Loaded += OnLoaded;
         _tray = new TrayService(WinRT.Interop.WindowNative.GetWindowHandle(this), RestoreWindow, () => _ = ExitAsync(),
             () => _viewModel.ToggleRecordingCommand.Execute(null), () => (_viewModel.IsReady, _viewModel.RecordingEnabled),
-            () => new StartupSnapshot(_viewModel.StartupEnabled, _viewModel.CanChangeStartup, _viewModel.StartupDescription),
+            () => _viewModel.StartupStatus,
             _viewModel.RefreshStartupAsync, () => _ = _viewModel.SetStartupAsync(!_viewModel.StartupEnabled), () => _viewModel.Settings.Theme);
         _hotkey = new HotkeyService(WinRT.Interop.WindowNative.GetWindowHandle(this), () => _ = ToggleQuickHistoryAsync());
         _viewModel.RegisterShortcut = _hotkey.Register;
@@ -90,13 +89,20 @@ public sealed partial class MainWindow : Window
             if (args.WindowActivationState != WindowActivationState.Deactivated) _ = _viewModel.RefreshStartupAsync();
         };
     }
+
+    private void RefreshLanguage()
+    {
+        UpdateCaptionState();
+        _quickHistory?.RefreshLanguage();
+        Feedback.IsOpen = false;
+    }
     private void ApplyShortcut(AppSettings settings)
     {
 #if DEBUG
         // Other isolated fixtures must not steal the running user's shortcut.
         if (Environment.GetEnvironmentVariable("CLIPFLOW_SELF_TEST") is not null) return;
 #endif
-        _viewModel.SetShortcutStatus(_hotkey.Register(settings.HotkeyModifiers, settings.HotkeyKey) ? "" : "快捷键已被占用或不可用，请更换组合");
+        _viewModel.SetShortcutStatus(_hotkey.Register(settings.HotkeyModifiers, settings.HotkeyKey) ? null : "ShortcutConflict");
     }
     private async Task ToggleQuickHistoryAsync()
     {
@@ -139,9 +145,9 @@ public sealed partial class MainWindow : Window
     {
         var maximized = AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Maximized };
         CaptionMaximizeGlyph.Glyph = maximized ? "\uE923" : "\uE922";
-        var label = maximized ? "还原窗口" : "最大化窗口";
+        var label = maximized ? L("RestoreWindow") : L("MaximizeWindow");
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(CaptionMaximize, label);
-        ToolTipService.SetToolTip(CaptionMaximize, maximized ? "还原" : "最大化");
+        ToolTipService.SetToolTip(CaptionMaximize, maximized ? L("Restore") : L("Maximize"));
     }
     [System.Runtime.InteropServices.DllImport("user32")] private static extern bool PostMessage(IntPtr hwnd, uint message, UIntPtr wParam, IntPtr lParam);
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -149,7 +155,7 @@ public sealed partial class MainWindow : Window
         Root.Loaded -= OnLoaded;
         PaneFooterText.Visibility = Navigation.IsPaneOpen ? Visibility.Visible : Visibility.Collapsed;
         await InitializeWindowAsync();
-        if (!_tray.IsAvailable) ShowNotice("系统托盘暂不可用，关闭窗口将退出应用。", true);
+        if (!_tray.IsAvailable) ShowNotice(L("TrayUnavailable"), true);
 #if DEBUG
         if (Environment.GetEnvironmentVariable("CLIPFLOW_SELF_TEST") == "quick-check" && Environment.GetEnvironmentVariable("CLIPFLOW_TEST_DATA_ROOT") is not null)
         {
@@ -210,8 +216,9 @@ public sealed partial class MainWindow : Window
     internal async Task StartInBackgroundAsync()
     {
         Root.Loaded -= OnLoaded;
+        if (_tray.IsAvailable) AppWindow.Hide();
         await InitializeWindowAsync();
-        if (_tray.IsAvailable) AppWindow.Hide(); else Activate();
+        if (!_tray.IsAvailable) Activate();
     }
 #if DEBUG
     internal async Task CheckBackgroundForTestAsync()
@@ -276,9 +283,9 @@ public sealed partial class MainWindow : Window
             var dialog = new ContentDialog
             {
                 XamlRoot = Root.XamlRoot, RequestedTheme = Root.RequestedTheme,
-                Title = allData ? "清空全部本地数据？" : "清空历史记录？",
-                Content = allData ? "所有记录、收藏和图片将被删除，设置将恢复默认。这项操作无法撤销。" : "所有记录、收藏和图片将被删除。这项操作无法撤销。",
-                PrimaryButtonText = "清空", CloseButtonText = "取消", DefaultButton = ContentDialogButton.Close
+                Title = allData ? L("ConfirmClearAllTitle") : L("ConfirmClearHistoryTitle"),
+                Content = allData ? L("ConfirmClearAll") : L("ConfirmClearHistory"),
+                PrimaryButtonText = L("Clear"), CloseButtonText = L("Cancel"), DefaultButton = ContentDialogButton.Close
             };
             return await dialog.ShowAsync() == ContentDialogResult.Primary;
         }
@@ -313,8 +320,8 @@ public sealed partial class MainWindow : Window
         var dialog = new ContentDialog
         {
             XamlRoot = Root.XamlRoot, RequestedTheme = Root.RequestedTheme,
-            Title = item.Record.Kind == ContentKind.Text ? "完整文本" : $"图片预览 · {item.Dimensions}",
-            Content = content, CloseButtonText = "关闭", PrimaryButtonText = "复制", DefaultButton = ContentDialogButton.Close
+            Title = item.Record.Kind == ContentKind.Text ? L("FullText") : L("ImagePreviewFormat", item.Dimensions),
+            Content = content, CloseButtonText = L("Close"), PrimaryButtonText = L("Copy"), DefaultButton = ContentDialogButton.Close
         };
         dialog.Resources["ContentDialogMaxWidth"] = Math.Max(320, Math.Min(900, Root.ActualWidth - 64));
         return dialog;
